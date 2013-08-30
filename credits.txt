@@ -1,0 +1,15 @@
+﻿http://github.com/qtau-devgroup/editor
+QTau is distributed under terms of BSD license
+see LICENSE
+
+ffft by Laurent de Soras http://ldesoras.free.fr/
+licensed under strictest terms of WTFPL
+
+Application icon pixelart: Ouka Alice by sn0w75
+http://twitter.com/sn0w75
+
+Icon set "Super Mono Sticker" by Double-J designs
+http://www.doublejdesign.co.uk/2010/07/super-mono-icons/
+
+Qt is LGPL obviously.
+

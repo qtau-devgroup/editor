@@ -1,0 +1,21 @@
+﻿Controls:
+    Note editor:
+        delete   -> delete selected notes
+
+        ctrl + e -> goggle edit mode on/off
+        ctrl + g -> toggle grid snap for adding/moving notes
+        ctrl + z -> undo previous action
+        ctrl + y -> redo previously undid action
+        
+        shift + mouse wheel -> horizontal scroll
+        ctrl  + mouse wheel -> zoom in/out
+        
+        hold right mouse button            -> scroll editor with mouse (in non-edit mode)
+        doubleclick with left mouse button -> edit note phoneme/lyrics (in edit mode)
+        
+        ctrl + s         -> save
+        ctrl + shift + s -> save as
+
+    Voice dynamics buttons:
+        left mouse button click  -> select active (foreground) graph to display
+        right mouse button click -> select (or disable) passive (background) graph to display

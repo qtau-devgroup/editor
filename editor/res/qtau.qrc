@@ -1,0 +1,34 @@
+<RCC>
+    <qresource prefix="/images">
+        <file>appicon_ouka_alice.png</file>
+        <file>b_gear.png</file>
+        <file>b_info.png</file>
+        <file>b_info2.png</file>
+        <file>b_lock.png</file>
+        <file>b_pause.png</file>
+        <file>b_pencil.png</file>
+        <file>b_play.png</file>
+        <file>b_redo.png</file>
+        <file>b_ruler.png</file>
+        <file>b_save.png</file>
+        <file>b_stop.png</file>
+        <file>b_undo.png</file>
+        <file>b_unlock.png</file>
+        <file>b_play_prev.png</file>
+        <file>b_repeat.png</file>
+        <file>b_mic.png</file>
+        <file>b_envelope.png</file>
+        <file>b_manual.png</file>
+        <file>b_notes.png</file>
+        <file>b_plug.png</file>
+        <file>b_blank.png</file>
+        <file>b_folder.png</file>
+        <file>b_cross.png</file>
+        <file>b_power.png</file>
+        <file>speaker.png</file>
+        <file>speaker-mute.png</file>
+    </qresource>
+    <qresource prefix="/tr">
+        <file>documentation_en.txt</file>
+    </qresource>
+</RCC>
