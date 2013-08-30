@@ -2,12 +2,9 @@ QTau editor
 ======
 
 Note editor inspired by Vocaloid, UTAU and Cadencii, uses Qt.
-
-License: BSD
-
-Dependencies: Qt 5
-
-OS: any supported by Qt
+ * License: BSD
+ * Dependencies: Qt 5
+ * OS: any supported by Qt
 
 Linked projects: [Rocaloid](http://github.com/Sleepwalking/Rocaloid "Rocaloid Engine"), [lauloid](http://gitorious.org/lauloid "lauloid")
 
