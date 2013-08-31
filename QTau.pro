@@ -77,3 +77,16 @@ RESOURCES += editor/res/qtau.qrc
 windows:RC_FILE = editor/res/qtau_win.rc
 
 QMAKE_CXXFLAGS += -Wunused-parameter
+
+#--------------------------------------------
+CONFIG(debug, debug|release) {
+    DESTDIR = $${OUT_PWD}/debug
+} else {
+    DESTDIR = $${OUT_PWD}/release
+}
+
+OBJECTS_DIR     = $${DESTDIR}/.obj
+MOC_DIR         = $${DESTDIR}/.moc
+RCC_DIR         = $${DESTDIR}/.rcc
+UI_DIR          = $${DESTDIR}/.ui
+#--------------------------------------------
