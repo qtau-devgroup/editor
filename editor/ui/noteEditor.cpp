@@ -19,7 +19,7 @@ const int CONST_SCROLL_MARGIN       = 20; // px of space between edge of widget 
 
 const double F_ROUNDER = 0.001f; // because float is floor'ed to int by default, so 3.9999999 becomes 3
 
-QTime t;
+//QTime t;
 
 
 qtauNoteEditor::qtauNoteEditor(QWidget *parent) :
@@ -37,7 +37,7 @@ qtauNoteEditor::qtauNoteEditor(QWidget *parent) :
 
     ctrl = new qtauEdController(*this, setup, notes, state);
 
-    t.start();
+    //t.start();
 }
 
 qtauNoteEditor::~qtauNoteEditor()
@@ -85,22 +85,25 @@ void qtauNoteEditor::onEvent(qtauEvent *e)
 
 void qtauNoteEditor::lazyUpdate()
 {
-    if (!updateCalled)
-    {
-        int now = t.elapsed();
+//    if (!updateCalled)
+//    {
+//        int now = t.elapsed();
 
-        if (now - lastUpdate < 15)
-        {
-            delayingUpdate = true;
-            QTimer::singleShot(10, this, SLOT(lazyUpdate()));
-        }
-        else
-        {
-            delayingUpdate = false;
-            updateCalled = true;
-            update();
-        }
-    }
+//        if (now - lastUpdate < 15)
+//        {
+//            delayingUpdate = true;
+//            QTimer::singleShot(10, this, SLOT(lazyUpdate()));
+//        }
+//        else
+//        {
+//            delayingUpdate = false;
+//            updateCalled = true;
+//            update();
+//        }
+//    }
+    /* delayed update desynchronizes drawing of piano/meter and note editor...
+        Either to delay drawing of all custom widgets, or just stop being lazy here. */
+    update();
 }
 
 //--------------------------------------------------
@@ -298,7 +301,7 @@ QPoint qtauNoteEditor::scrollTo(const QRect &r)
 
 void qtauNoteEditor::paintEvent(QPaintEvent *event)
 {
-    lastUpdate = t.elapsed();
+    //lastUpdate = t.elapsed();
 
     // draw bg
     QRect r(event->rect());
@@ -315,9 +318,6 @@ void qtauNoteEditor::paintEvent(QPaintEvent *event)
     cacheRect.moveTo(cacheRect.x() + cacheHOffset, cacheRect.y() + cacheVOffset);
 
     QPainter p(this);
-    p.setCompositionMode(QPainter::CompositionMode_SourceOver);
-    p.setRenderHint(QPainter::Antialiasing, false);
-//    p.fillRect(event->rect(), Qt::transparent);
     p.drawPixmap(r, *bgCache, cacheRect);
 
     // singing notes with phoneme labels -------

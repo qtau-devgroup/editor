@@ -7,6 +7,8 @@
 #include <QTextStream>
 #include <QStringList>
 
+#include <QtAlgorithms>
+
 
 qtauSession::qtauSession(QObject *parent) :
     qtauEventManager(parent), docName(tr("Untitled")), isModified(false), hadSavePoint(false),
@@ -95,25 +97,12 @@ bool qtauSession::loadUST(QString fileName)
     return result;
 }
 
+QStringList qtauSession::ustStrings(bool) { return ustToStrings(ustRef()); }
+QByteArray  qtauSession::ustBinary()      { return ustToBytes  (ustRef()); }
 
-QStringList qtauSession::ustStrings(bool) // TODO: make something better than remaking note vector on every call?
+inline bool dataNotesComparison(const ust_note &n1, const ust_note &n2)
 {
-    data.notes.clear();
-
-    foreach (const quint64 &key, noteMap.keys())
-        data.notes.append(noteMap[key]);
-
-    return ustToStrings(data);
-}
-
-QByteArray  qtauSession::ustBinary()
-{
-    data.notes.clear();
-
-    foreach (const quint64 &key, noteMap.keys())
-        data.notes.append(noteMap[key]);
-
-    return ustToBytes(data);
+    return n1.pulseOffset < n2.pulseOffset;
 }
 
 const ust&  qtauSession::ustRef()
@@ -122,6 +111,8 @@ const ust&  qtauSession::ustRef()
 
     foreach (const quint64 &key, noteMap.keys())
         data.notes.append(noteMap[key]);
+
+    qStableSort(data.notes.begin(), data.notes.end(), dataNotesComparison);
 
     return data;
 }

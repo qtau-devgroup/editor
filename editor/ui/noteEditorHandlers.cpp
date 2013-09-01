@@ -3,6 +3,7 @@
 #include "editor/NoteEvents.h"
 
 #include <QtWidgets/QLineEdit>
+#include <QKeyEvent>
 
 const int CONST_NOTE_RESIZE_CURSOR_MARGIN = 6;
 
@@ -344,7 +345,7 @@ qne::editorNote* qtauEdController::noteInPoint(const QPoint &p)
 
 qtauEd_TextInput::qtauEd_TextInput(
     qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
-    qtauEdController(ne, ns, nts, st) {}
+    qtauEdController(ne, ns, nts, st), managedOnEdited(false), editingNote(false) {}
 
 qtauEd_TextInput::qtauEd_TextInput(qtauEdController *c) : qtauEdController(c) {}
 
@@ -357,6 +358,7 @@ void qtauEd_TextInput::cleanup()
         editingNote = false;
         disconnect(edit, SIGNAL(editingFinished()), this, SLOT(onEdited()));
         disconnect(edit, SIGNAL(returnPressed  ()), this, SLOT(unfocus()));
+        edit->removeEventFilter(this);
         owner->setFocus();
         edit->setVisible(false);
     }
@@ -385,6 +387,8 @@ void qtauEd_TextInput::init()
         edit->setText(editedNote->txt);
         edit->setFocus();
         edit->selectAll();
+
+        edit->installEventFilter(this);
     }
 }
 
@@ -420,8 +424,93 @@ void qtauEd_TextInput::onEdited()
         }
 
         lazyUpdate();
-        changeController(new qtauEdController(this));
+
+        if (!managedOnEdited)
+            changeController(new qtauEdController(this));
     }
+}
+
+bool qtauEd_TextInput::eventFilter(QObject */*obj*/, QEvent *event)
+{
+    bool result = false; // we don't handle the event by default, passing it to be handled by qlineedit itself
+
+    if (editingNote && (event->type() == QEvent::KeyPress || event->type() == QEvent::Shortcut))
+    {
+        QKeyEvent *keyEvent = static_cast<QKeyEvent *>(event);
+
+        if (keyEvent->key() == Qt::Key_Tab || (keyEvent->key() == Qt::Key_Backtab))
+        {
+            int targetOffset = editedNote->r.x();
+            int stBar  = targetOffset / setup->barWidth;
+            qne::editorNote *nextNote = 0;
+
+            if (stBar < notes->grid.size())
+            {
+                if (keyEvent->key() == Qt::Key_Backtab)  // move editing focus to previous note ----------
+                {
+                    if (targetOffset > 0) // no point in shift-tabbing if current note is first already
+                    {
+                        for (int bar = stBar; bar >= 0; --bar)
+                        {
+                            const QVector<quint64> &gridBar = notes->grid[bar];
+
+                            for (int n = 0; n < gridBar.size(); ++n)
+                            {
+                                if (gridBar[n] != editedNote->id)
+                                {
+                                    qne::editorNote *note = &notes->idMap[gridBar[n]];
+
+                                    if (note->r.x() < targetOffset)
+                                        if (!nextNote || nextNote->r.x() < note->r.x())
+                                            nextNote = note;
+                                }
+                            } // looping though all notes in a bar without break to find closest one, since they're unordered
+
+                            if (nextNote)
+                                break;
+                        } //               end looping bar grid
+                    }
+                }
+                else // ------------------------------------------ move editing focus to next note --------------
+                {
+                    int endBar = notes->grid.size();
+
+                    for (int bar = stBar; bar < endBar; ++bar)
+                    {
+                        const QVector<quint64> &gridBar = notes->grid[bar];
+
+                        for (int n = 0; n < gridBar.size(); ++n)
+                        {
+                            if (gridBar[n] != editedNote->id)
+                            {
+                                qne::editorNote *note = &notes->idMap[gridBar[n]];
+
+                                if (note->r.x() > targetOffset)
+                                    if (!nextNote || nextNote->r.x() > note->r.x())
+                                        nextNote = note;
+                            }
+                        } // looping though all notes in a bar without break to find closest one, since they're unordered
+
+                        if (nextNote)
+                            break;
+                    } //               end looping bar grid
+                }
+            }
+            else vsLog::e("Currently edited note isn't in notes grid. How could this happen?..");
+
+            managedOnEdited = nextNote != 0;
+            onEdited(); // shouldn't delete this if managedOnEdited
+
+            if (nextNote)
+            {
+                result = true; // flag qlineedit that the event was handled
+                pointedNote = nextNote;
+                changeController(new qtauEd_TextInput(this));
+            }
+        }
+    }
+
+    return result;
 }
 
 //========================================================================

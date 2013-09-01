@@ -142,12 +142,14 @@ protected:
     void cleanup();
     void init();
 
+    bool managedOnEdited; // if onEdited() is called manually and need a different controller next
     bool editingNote;
     qne::editorNote *editedNote;
 
 protected slots:
     void onEdited();
     void unfocus();
+    bool eventFilter(QObject *obj, QEvent *event);
 
 };
 
