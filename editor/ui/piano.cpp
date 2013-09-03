@@ -245,8 +245,8 @@ void qtauPiano::mouseDoubleClickEvent(QMouseEvent *event)
 
             if (k != 0) // found pressed key
             {
-                emit keyPressed (k->number / 12, k->octIndex);
-                emit keyReleased(k->number / 12, k->octIndex);
+                emit keyPressed (k->number);
+                emit keyReleased(k->number);
                 break;
             }
         }
@@ -300,7 +300,7 @@ void qtauPiano::mousePressEvent(QMouseEvent *event)
                     lastR.moveTo(lastR.topLeft() - offset);
                     update(lastR);
 
-                    emit keyReleased(pressedKey->number / 12, pressedKey->octIndex);
+                    emit keyReleased(pressedKey->number);
                 }
 
                 // drawing it pressed
@@ -311,7 +311,7 @@ void qtauPiano::mousePressEvent(QMouseEvent *event)
 
                 pressedKey = k;
 
-                emit keyPressed(k->number / 12, k->octIndex);
+                emit keyPressed(k->number);
                 break;
             }
         }
@@ -343,7 +343,7 @@ void qtauPiano::mouseReleaseEvent(QMouseEvent *event)
         keyR.moveTo(keyR.topLeft() - offset);
         update(keyR);
 
-        emit keyReleased(k->number / 12, k->octIndex);
+        emit keyReleased(k->number);
     }
 }
 

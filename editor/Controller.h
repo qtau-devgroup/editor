@@ -45,8 +45,8 @@ public slots:
 
     void onVolumeChanged(int);
 
-    void pianoKeyPressed(int,int);
-    void pianoKeyReleased(int,int);
+    void pianoKeyPressed(int);
+    void pianoKeyReleased(int);
 
 protected:
     qtmmPlayer *player;

@@ -72,7 +72,7 @@ qtauAudioSource::qtauAudioSource(const SWavegenSetup &s, QObject *parent) :
                 phase -= M_PI * 2;
         }
 
-    write('\0', 1);
+    write("\0\0", 1);
     close();
 }
 

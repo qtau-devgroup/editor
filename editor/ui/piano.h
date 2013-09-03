@@ -19,8 +19,8 @@ public:
     void configure(const noteSetup &newSetup);
 
 signals:
-    void keyPressed (int octaveNum, int keyNum);
-    void keyReleased(int octaveNum, int keyNum);
+    void keyPressed (int keyNum);
+    void keyReleased(int keyNum);
 
     void scrolled(int delta);
     void heightChanged(int newHeight);

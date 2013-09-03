@@ -522,8 +522,8 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     c.onVolumeChanged(volume->value());
 
     //-----------------------------------------------------------------------
-    connect(piano, SIGNAL(keyPressed(int,int)),  &c, SLOT(pianoKeyPressed (int,int)));
-    connect(piano, SIGNAL(keyReleased(int,int)), &c, SLOT(pianoKeyReleased(int,int)));
+    connect(piano, SIGNAL(keyPressed (int)), &c, SLOT(pianoKeyPressed (int)));
+    connect(piano, SIGNAL(keyReleased(int)), &c, SLOT(pianoKeyReleased(int)));
     //-----------------------------------------------------------------------
 
     // widget configuration - maybe read app settings here?

@@ -168,13 +168,27 @@ void qtauController::onAppMessage(const QString &msg)
     mw->setWindowState(Qt::WindowActive); // TODO: test
 }
 
-void qtauController::pianoKeyPressed(int /*octaveNum*/, int /*keyNum*/)
+qtauAudioSource *tmpAS = 0;
+
+void qtauController::pianoKeyPressed(int keyNum)
 {
-    // should play "a" of corresponding pitch
-    //qDebug() << "piano key pressed: " << octaveNum << keyNum;
+    if (!tmpAS)
+        tmpAS = new qtauAudioSource(this);
+
+    ISynth *s = synths.values().first();
+    ust u;
+    u.tempo = 120;
+    u.notes.append(ust_note(0, "a", 0, 480*4, keyNum));
+    s->setVocals(u);
+
+    if (s->synthesize(*tmpAS))
+    {
+        player->stop();
+        player->play(tmpAS);
+    }
 }
 
-void qtauController::pianoKeyReleased(int /*octaveNum*/, int /*keyNum*/)
+void qtauController::pianoKeyReleased(int /*keyNum*/)
 {
     //qDebug() << "piano key released: " << octaveNum << keyNum;
 }
