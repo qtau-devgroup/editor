@@ -83,6 +83,7 @@ bool qtauController::setupPlugins()
             if (s)
                 initSynth(s);
         }
+        else vsLog::d("Incompatible plugin: " + fileName);
     }
 
     return false;
@@ -172,19 +173,23 @@ qtauAudioSource *tmpAS = 0;
 
 void qtauController::pianoKeyPressed(int keyNum)
 {
-    if (!tmpAS)
-        tmpAS = new qtauAudioSource(this);
-
-    ISynth *s = synths.values().first();
-    ust u;
-    u.tempo = 120;
-    u.notes.append(ust_note(0, "a", 0, 480*4, keyNum));
-    s->setVocals(u);
-
-    if (s->synthesize(*tmpAS))
+    if (!synths.isEmpty())
     {
-        player->stop();
-        player->play(tmpAS);
+        if (!tmpAS)
+            tmpAS = new qtauAudioSource(this);
+
+        ISynth *s = synths.values().first();
+        ust u;
+        u.tempo = 120;
+        u.notes.append(ust_note(0, "a", 0, 480*4, keyNum));
+        s->setVocals(u);
+
+        if (s->synthesize(*tmpAS))
+        {
+            qDebug() << tmpAS->getAudioFormat().bytesForDuration(2000000) << tmpAS->size();
+            player->stop();
+            player->play(tmpAS);
+        }
     }
 }
 
