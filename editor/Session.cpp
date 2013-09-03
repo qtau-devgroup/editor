@@ -1,6 +1,6 @@
-#include "editor/Session.h"
-#include "editor/Utils.h"
-#include "editor/audio/Source.h"
+#include "Session.h"
+#include "Utils.h"
+#include "audio/Source.h"
 
 #include <QFile>
 #include <QFileInfo>

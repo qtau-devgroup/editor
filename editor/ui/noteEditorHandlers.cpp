@@ -1,8 +1,8 @@
-#include "editor/ui/noteEditorHandlers.h"
-#include "editor/ui/noteEditor.h"
-#include "editor/NoteEvents.h"
+#include "ui/noteEditorHandlers.h"
+#include "ui/noteEditor.h"
+#include "NoteEvents.h"
 
-#include <QtWidgets/QLineEdit>
+#include <QLineEdit>
 #include <QKeyEvent>
 
 const int CONST_NOTE_RESIZE_CURSOR_MARGIN = 6;
@@ -670,9 +670,11 @@ void qtauEd_DragNotes::mouseMoveEvent(QMouseEvent *event)
 
     int minOffset = (setup->note.width() * 4) / setup->quantize;
 
-    desiredPos.setX(qMax(0, qMin(snap(desiredPos.x(), minOffset), setup->barWidth * 128)));
+    if (state->gridSnapEnabled)
+        desiredPos.setX(qMax(0, qMin(snap(desiredPos.x(), minOffset), setup->barWidth * 128)));
+
     desiredPos.setY(qMax(0, qMin(snap(desiredPos.y(), setup->note.height()),
-                                 setup->octHeight * setup->numOctaves)));
+                                 setup->octHeight * setup->numOctaves))); // always snapping Y to pitch grid
 
     QPoint snappedDelta = desiredPos - mainMovedNote->dragSt;
 
@@ -831,8 +833,11 @@ void qtauEd_ResizeNote::mouseMoveEvent(QMouseEvent *event)
     float pixelsToPulses = 480.0 / (float)setup->note.width(); // TODO: maybe shouldn't calc it every time?
 
     QRect newNoteRect(editedNote->r);
-    int cursorHPos = snap(event->pos().x() + state->viewport.x(), minNoteWidth,
-                          (toLeft ? editedNote->r.right() + 1 : editedNote->r.left()));
+
+    int cursorHPos = event->pos().x() + state->viewport.x();
+
+    if (state->gridSnapEnabled)
+        cursorHPos = snap(cursorHPos, minNoteWidth, (toLeft ? editedNote->r.right() + 1 : editedNote->r.left()));
 
     if (toLeft)
         // calc new left coord, with magical +1's, because no code can work properly without a bit of magic
@@ -985,7 +990,11 @@ void qtauEd_AddNote::init()
 
 void qtauEd_AddNote::mouseMoveEvent(QMouseEvent *event)
 {
-    int cursorHPos = snap(event->pos().x() + state->viewport.x(), minOffset, editedNote->r.x());
+    int cursorHPos = event->pos().x() + state->viewport.x();
+
+    if (state->gridSnapEnabled)
+        snap(cursorHPos, minOffset, editedNote->r.x());
+
     int desiredRight = qMin(setup->barWidth * 128,
                             qMax(cursorHPos - 1, editedNote->r.left() + minOffset - 1));
 

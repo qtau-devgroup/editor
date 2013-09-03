@@ -1,3 +1,9 @@
 [submodule "tools/lesynth"]
 	path = tools/lesynth
-	url = https://github.com/digited/lesynth.git
+	url = https://github.com/qtau-devgroup/lesynth.git
+[submodule "tools/stand"]
+	path = tools/stand
+	url = https://github.com/qtau-devgroup/stand.git
+[submodule "tools/libvsq"]
+	path = tools/libvsq
+	url = https://github.com/qtau-devgroup/libvsq.git

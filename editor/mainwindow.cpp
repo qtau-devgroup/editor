@@ -5,8 +5,8 @@
 #include <QtCore>
 #include <QIcon>
 
-#include "editor/Controller.h"
-#include "editor/Session.h"
+#include "Controller.h"
+#include "Session.h"
 
 #include <QGridLayout>
 #include <QScrollBar>
@@ -21,14 +21,14 @@
 
 #include <QFileDialog>
 
-#include "editor/ui/Config.h"
-#include "editor/ui/piano.h"
-#include "editor/ui/dynDrawer.h"
-#include "editor/ui/noteEditor.h"
-#include "editor/ui/meter.h"
-#include "editor/ui/waveform.h"
+#include "ui/Config.h"
+#include "ui/piano.h"
+#include "ui/dynDrawer.h"
+#include "ui/noteEditor.h"
+#include "ui/meter.h"
+#include "ui/waveform.h"
 
-#include "editor/audio/Codec.h"
+#include "audio/Codec.h"
 
 const int CONST_NUM_BARS            = 128; // 128 bars "is enough for everyone"
 
@@ -46,9 +46,13 @@ const QString dynLblFGcss  = QString("QLabel { color : %1; background-color : %2
 
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent), ui(new Ui::MainWindow), doc(0), fgDynLbl(0), bgDynLbl(0), logHasErrors(false)
+    QMainWindow(parent), ui(new Ui::MainWindow), doc(0), fgDynLbl(0), bgDynLbl(0),
+    logNewMessages(0), logHasErrors(false), showNewLogNumber(true)
 {
     ui->setupUi(this);
+
+    QSettings settings("QTau_Devgroup", "QTau");
+
     setWindowIcon(QIcon(":/images/appicon_ouka_alice.png"));
     setWindowTitle("QTau");
     setAcceptDrops(true);
@@ -363,6 +367,9 @@ MainWindow::MainWindow(QWidget *parent) :
     tabs->widget(3)->setContentsMargins(0,0,0,0);
     tabs->widget(4)->setContentsMargins(0,0,0,0);
     tabs->widget(5)->setContentsMargins(0,0,0,0);
+
+    logTabTextColor = tabs->tabBar()->tabTextColor(5);
+    showNewLogNumber = settings.value("show_new_log_number", true).toBool();
 
     connect(tabs, SIGNAL(currentChanged(int)), SLOT(onTabSelected(int)));
 
@@ -701,7 +708,7 @@ void MainWindow::onEditMode(bool toggled)
 
 void MainWindow::onGridSnap(bool toggled)
 {
-    vsLog::d(QString("Grid snap is %1").arg((toggled ? "enabled" : "disabled")));
+    noteEditor->setGridSnapEnabled(toggled);
 }
 
 void MainWindow::onQuantizeSelected(int index)
@@ -784,18 +791,31 @@ void MainWindow::dynBtnRClicked()
 void MainWindow::onLog(const QString &msg, int type)
 {
     QString color = "black";
+    bool viewingLog = tabs->currentIndex() == tabs->count() - 1;
 
     switch((vsLog::msgType)type)
     {
     case vsLog::error:
         color = "red";
-        tabs->setTabText(tabs->count() - 1, tr("Log") + " (!)");
-        logHasErrors = true;
         break;
     case vsLog::success:
         color = "green";
         break;
     default: break;
+    }
+
+    if (!viewingLog)
+    {
+        logNewMessages++;
+
+        QTabBar *tb = const_cast<QTabBar *>(tabs->tabBar()); // dirty hack I know, but no other way atm
+        tb->setTabText     (tb->count() - 1, tr("Log") + QString(" (%1)").arg(logNewMessages));
+
+        if ((vsLog::msgType)type == vsLog::error)
+        {
+            tb->setTabTextColor(tb->count() - 1, QColor(DEFCOLOR_LOGTAB_ERR));
+            logHasErrors = true;
+        }
     }
 
     logpad->moveCursor(QTextCursor::End);
@@ -812,10 +832,21 @@ void MainWindow::onTabSelected(int index)
 {
     enableToolbars(index == 0);
 
-    if (index == tabs->count() - 1 && logHasErrors) // log with errors selected, revert alert style
+    if (index == tabs->count() - 1)
     {
-        tabs->setTabText(tabs->count() - 1, tr("Log"));
-        logHasErrors = false;
+        QTabBar *tb = const_cast<QTabBar *>(tabs->tabBar());
+
+        if (logNewMessages > 0)
+        {
+            tb->setTabText(tb->count() - 1, tr("Log"));
+            logNewMessages = 0;
+        }
+
+        if (logHasErrors)
+        {
+            tb->setTabTextColor(tb->count() - 1, logTabTextColor); // set default color back
+            logHasErrors = false;
+        }
     }
 }
 

@@ -1,7 +1,7 @@
 #ifndef QTAU_AUDIO_MIXER_H
 #define QTAU_AUDIO_MIXER_H
 
-#include "editor/audio/Source.h"
+#include "audio/Source.h"
 
 class qtauSoundMixer : public qtauAudioSource
 {

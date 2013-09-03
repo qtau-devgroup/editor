@@ -1,7 +1,7 @@
 #ifndef QTAU_AUDIO_FILE_H
 #define QTAU_AUDIO_FILE_H
 
-#include "editor/audio/Source.h"
+#include "audio/Source.h"
 #include <QMap>
 
 // codec is intermediate between buffered PCM data and some source of encoded audio

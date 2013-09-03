@@ -4,7 +4,7 @@
 // basic codecs for QTau - wav, flac and ogg
 // mp3, aac/m4a and true audio should be added via plugins
 
-#include "editor/audio/Codec.h"
+#include "audio/Codec.h"
 
 
 class qtauWavCodec : public qtauAudioCodec

@@ -34,6 +34,9 @@ public:
     QAudioBuffer getAudioBuffer() { return QAudioBuffer(this->buffer(), fmt); }
     QAudioFormat getAudioFormat() { return fmt; }
 
+    // use if rewriting buffer data completely
+    void setAudioFormat(const QAudioFormat &f) { fmt = f; }
+
     // should read all contents of file/socket and decode it to PCM in buf
     virtual bool cacheAll() { return true; }
 

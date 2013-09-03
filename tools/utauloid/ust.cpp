@@ -1,4 +1,4 @@
-#include "tools/utauloid/ust.h"
+#include "utauloid/ust.h"
 #include <QRegExp>
 #include <QDebug>
 

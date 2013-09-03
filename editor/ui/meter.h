@@ -1,7 +1,7 @@
 #ifndef METER_H
 #define METER_H
 
-#include "editor/Utils.h"
+#include "Utils.h"
 
 class QPixmap;
 

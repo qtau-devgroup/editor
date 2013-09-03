@@ -1,6 +1,6 @@
-#include "editor/audio/Player.h"
-#include "editor/audio/Source.h"
-#include "editor/Utils.h"
+#include "audio/Player.h"
+#include "audio/Source.h"
+#include "Utils.h"
 
 #include <QAudioOutput>
 

@@ -2,7 +2,7 @@
 #define PIANO_H
 
 #include <QVector>
-#include "editor/Utils.h"
+#include "Utils.h"
 
 class QPixmap;
 

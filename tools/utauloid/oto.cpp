@@ -1,4 +1,4 @@
-#include "tools/utauloid/oto.h"
+#include "utauloid/oto.h"
 #include <QRegExp>
 #include <QDebug>
 

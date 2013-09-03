@@ -1,11 +1,11 @@
 #ifndef MAINWINDOW_H
 #define MAINWINDOW_H
 
-#include <QtWidgets/QMainWindow>
+#include <QMainWindow>
 #include <QUrl>
 
-#include "editor/Utils.h"
-#include "tools/utauloid/ust.h"
+#include "Utils.h"
+#include "utauloid/ust.h"
 
 class qtauController;
 class qtauSession;
@@ -135,7 +135,11 @@ protected:
     QList<QToolBar*> toolbars;
     void enableToolbars(bool enable = true);
 
-    bool logHasErrors;
+    QColor  logTabTextColor;
+    int     logNewMessages;
+    bool    logHasErrors;
+    bool    showNewLogNumber;
+
     QString docName;
 
     void dragEnterEvent(QDragEnterEvent *);

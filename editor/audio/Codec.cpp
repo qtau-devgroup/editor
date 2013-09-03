@@ -1,5 +1,5 @@
-#include "editor/audio/Codec.h"
-#include "editor/Utils.h"
+#include "audio/Codec.h"
+#include "Utils.h"
 
 
 qtauAudioCodec::qtauAudioCodec(QIODevice &d, QObject *parent) :

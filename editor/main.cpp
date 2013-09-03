@@ -1,5 +1,5 @@
-#include <QtWidgets/QApplication>
-#include "editor/Controller.h"
+#include <QApplication>
+#include "Controller.h"
 #include <QIcon>
 
 int main(int argc, char *argv[])

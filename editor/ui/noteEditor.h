@@ -1,8 +1,8 @@
 #ifndef NOTEEDITOR_H
 #define NOTEEDITOR_H
 
-#include "editor/Utils.h"
-#include "editor/ui/Config.h"
+#include "Utils.h"
+#include "ui/Config.h"
 #include <QUrl>
 
 class qtauEvent_NoteAddition;

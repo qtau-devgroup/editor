@@ -1,6 +1,6 @@
-#include "editor/ui/waveform.h"
-#include "editor/ui/Config.h"
-#include "editor/audio/Source.h"
+#include "ui/waveform.h"
+#include "ui/Config.h"
+#include "audio/Source.h"
 
 #include <qmath.h>
 

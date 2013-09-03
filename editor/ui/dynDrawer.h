@@ -1,9 +1,9 @@
 #ifndef DYNDRAWER_H
 #define DYNDRAWER_H
 
-#include "editor/Utils.h"
+#include "Utils.h"
 
-#include <QtWidgets/QLabel>
+#include <QLabel>
 
 class QPixmap;
 

@@ -1,14 +1,14 @@
 #include "mainwindow.h"
 
-#include "editor/Session.h"
-#include "editor/Controller.h"
-#include "editor/PluginInterfaces.h"
-#include "editor/Utils.h"
+#include "Session.h"
+#include "Controller.h"
+#include "PluginInterfaces.h"
+#include "Utils.h"
 
-#include "editor/audio/Player.h"
-#include "editor/audio/CodecBase.h"
+#include "audio/Player.h"
+#include "audio/CodecBase.h"
 
-#include <QtWidgets/QApplication>
+#include <QApplication>
 #include <QPluginLoader>
 
 

@@ -1,5 +1,5 @@
-#include "editor/audio/CodecBase.h"
-#include "editor/Utils.h"
+#include "audio/CodecBase.h"
+#include "Utils.h"
 
 
 typedef struct {
@@ -44,6 +44,7 @@ bool qtauWavCodec::cacheAll()
 
         open(QIODevice::WriteOnly);
         write(dev->readAll());
+        write('\0'); // is that a reason of all those "buffer underflow"s from QAudioOutput?..
         close();
     }
 

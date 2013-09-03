@@ -1,6 +1,6 @@
-#include "editor/ui/noteEditor.h"
-#include "editor/ui/noteEditorHandlers.h"
-#include "editor/NoteEvents.h"
+#include "ui/noteEditor.h"
+#include "ui/noteEditorHandlers.h"
+#include "NoteEvents.h"
 
 #include <QTime>
 #include <QTimer>
@@ -8,7 +8,7 @@
 #include <QPainterPath>
 #include <QMimeData>
 
-#include <QtWidgets/QLineEdit>
+#include <QLineEdit>
 
 const int CONST_CACHE_DEFNUM_LABELS = 1000;
 const int CONST_CACHE_LINE_HEIGHT   = 12;

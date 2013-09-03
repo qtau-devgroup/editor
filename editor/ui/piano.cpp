@@ -1,9 +1,9 @@
-#include "editor/ui/piano.h"
+#include "ui/piano.h"
 #include <qevent.h>
 #include <qpainter.h>
 #include <QDebug>
 
-#include "editor/ui/Config.h"
+#include "ui/Config.h"
 
 const int CONST_PIANO_LABELHEIGHT = 14;
 const int CONST_PIANO_LABELWIDTH  = 50;

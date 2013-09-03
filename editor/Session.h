@@ -1,10 +1,10 @@
 #ifndef SESSION_H
 #define SESSION_H
 
-#include "editor/Utils.h"
-#include "editor/NoteEvents.h"
+#include "Utils.h"
+#include "NoteEvents.h"
 
-#include "tools/utauloid/ust.h"
+#include "utauloid/ust.h"
 
 class qtauAudioSource;
 

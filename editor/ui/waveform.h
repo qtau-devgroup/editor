@@ -1,7 +1,7 @@
 #ifndef WAVEFORM_H
 #define WAVEFORM_H
 
-#include "editor/Utils.h"
+#include "Utils.h"
 #include <QWidget>
 
 class QPixmap;

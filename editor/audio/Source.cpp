@@ -1,5 +1,5 @@
-#include "editor/audio/Source.h"
-#include "editor/Utils.h"
+#include "audio/Source.h"
+#include "Utils.h"
 #include <qmath.h>
 #include <qendian.h>
 
