@@ -76,8 +76,8 @@ void qtauSoundMixer::extract(QVector<float> &buffer, int sampleRate, int frameCo
         {
             bufferIndex = f * channelCount + c;
             int sourceIndex = (f * sourceChannelCount + channelOffset) * 2;
-            qint16 val = qFromLittleEndian<qint16>(reinterpret_cast<const uchar *>(source->buffer().data() + bufferIndex));
-            buffer[sourceIndex] = val / 32768.0f;
+            qint16 val = qFromLittleEndian<qint16>(reinterpret_cast<const uchar *>(source->buffer().data() + sourceIndex));
+            buffer[bufferIndex] = val / 32768.0f;
         }
     }
     for(; bufferIndex < frameCount; bufferIndex++)
