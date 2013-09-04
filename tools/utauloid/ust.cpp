@@ -63,7 +63,7 @@ ust ustFromStrings(const QStringList &sl)
                     if (splitted.first().contains("GFactor"))
                         u.gfactor = splitted.at(1).toFloat();
                     else if (splitted.first().contains("Tempo"))
-                        u.tempo = splitted.at(1).toInt();
+                        u.tempo = splitted.at(1).toFloat();
                     else if (!s.isEmpty())
                         u.userData.append(s);
 

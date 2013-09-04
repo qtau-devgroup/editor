@@ -27,28 +27,41 @@ bool qtmmPlayer::play(qtauAudioSource *a)
 
     if (a != 0)
     {
+        bool needToRemakeDevice = audioOutput && audioOutput->format() != a->getAudioFormat();
+
         if (audioOutput)
         {
             if (audioOutput->state() != QAudio::IdleState ||
                 audioOutput->state() != QAudio::StoppedState)
                 stop();
 
-            delete audioOutput;
+            if (needToRemakeDevice)
+            {
+                delete audioOutput;
+                audioOutput = 0;
+            }
         }
 
         if (a->size() > 0)
         {
-            QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
-
-            if (info.isFormatSupported(a->getAudioFormat()))
+            if (!audioOutput)
             {
-                QAudioDeviceInfo di(QAudioDeviceInfo::defaultOutputDevice());
-                audioOutput = new QAudioOutput(di, a->getAudioFormat(), this);
-                audioOutput->setVolume((qreal)volume / 100.f);
+                QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
 
-                connect(audioOutput, SIGNAL(stateChanged(QAudio::State)), SLOT(onQtmmStateChanged(QAudio::State)));;
-                connect(audioOutput, SIGNAL(notify()), SLOT(onTick()));
+                if (info.isFormatSupported(a->getAudioFormat()))
+                {
+                    QAudioDeviceInfo di(QAudioDeviceInfo::defaultOutputDevice());
+                    audioOutput = new QAudioOutput(di, a->getAudioFormat(), this);
+                    audioOutput->setVolume((qreal)volume / 100.f);
 
+                    connect(audioOutput, SIGNAL(stateChanged(QAudio::State)), SLOT(onQtmmStateChanged(QAudio::State)));;
+                    connect(audioOutput, SIGNAL(notify()), SLOT(onTick()));
+                }
+                else vsLog::e("audio format not supported by backend, cannot play audio.");
+            }
+
+            if (audioOutput)
+            {
                 bool opened = a->isOpen();
 
                 if (!opened)
@@ -59,14 +72,10 @@ bool qtmmPlayer::play(qtauAudioSource *a)
                     audioOutput->start(a); // audioOutput::start requires a device, opened for reading
                     result = true;
                 }
-                else
-                    vsLog::e("Could not open audio source device at all. How is this even possible?");
+                else vsLog::e("Could not open audio source device at all. How is this even possible?");
             }
-            else
-                vsLog::e("audio format not supported by backend, cannot play audio.");
         }
-        else
-            vsLog::e("no audio data to play");
+        else vsLog::e("no audio data to play");
     }
     else
         if (audioOutput)

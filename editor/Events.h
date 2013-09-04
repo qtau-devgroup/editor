@@ -62,6 +62,7 @@ public:
         {
             futureEvents.push(events.pop());
             futureEvents.top()->_forward = false;
+            processEvent(futureEvents.top());
             stackChanged();
             emit onEvent(futureEvents.top());
         }
@@ -73,6 +74,7 @@ public:
         {
             events.push(futureEvents.pop());
             events.top()->_forward = true;
+            processEvent(events.top());
             stackChanged();
             emit onEvent(events.top());
         }
@@ -91,8 +93,9 @@ protected:
     QStack<qtauEvent*> events;
     QStack<qtauEvent*> futureEvents; // what was undo'ed
 
-    // can be (should be?) overloaded to send undo/redo availability status to UI
-    virtual void stackChanged() {}
+    // making those functions purely virtual crashes app at calling stackChange from clearHistory on destruction
+    virtual bool processEvent(qtauEvent*) { return false; } // on undo/redo
+    virtual void stackChanged() {} // on store (add) and clear (remove all)
 
     void clearPast()
     {

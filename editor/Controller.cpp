@@ -55,18 +55,6 @@ bool qtauController::setupTranslations()
 bool qtauController::setupPlugins()
 {
     pluginsDir = QDir(qApp->applicationDirPath());
-
-#if defined(Q_OS_WIN)
-    if (pluginsDir.dirName().toLower() == "debug" || pluginsDir.dirName().toLower() == "release")
-        pluginsDir.cdUp();
-#elif defined(Q_OS_MAC)
-    if (pluginsDir.dirName() == "MacOS")
-    {
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-        pluginsDir.cdUp();
-    }
-#endif
     pluginsDir.cd("plugins");
 
     vsLog::i("Searching for plugins in " + pluginsDir.absolutePath());
@@ -181,12 +169,11 @@ void qtauController::pianoKeyPressed(int keyNum)
         ISynth *s = synths.values().first();
         ust u;
         u.tempo = 120;
-        u.notes.append(ust_note(0, "a", 0, 480*4, keyNum));
+        u.notes.append(ust_note(0, "a", 0, 480*3, keyNum)); // 480 pulses * 3 @ 120bpm is 3 notes, 1.5 sec
         s->setVocals(u);
 
         if (s->synthesize(*tmpAS))
         {
-            qDebug() << tmpAS->getAudioFormat().bytesForDuration(2000000) << tmpAS->size();
             player->stop();
             player->play(tmpAS);
         }
@@ -264,6 +251,7 @@ void qtauController::onRequestSynthesis()
                 {
                     vsLog::s("Synthesis complete. Yay!");
                     activeSession->getVocal().needsSynthesis = false;
+                    activeSession->vocalWaveWasModified();
 
                     onRequestStartPlayback();
                 }
@@ -293,7 +281,9 @@ void qtauController::onRequestStartPlayback()
         }
         else
         {
-            // play just vocal
+            playState.state = Playing;
+            activeSession->setPlaybackState(qtauSessionPlayback::Playing);
+            player->play(v.vocalWave);
         }
     }
     else if (gotMusic)

@@ -94,6 +94,9 @@ public slots:
     void resetPlayback();
     void repeatPlayback();
 
+    void vocalWaveWasModified();
+    void musicWaveWasModified();
+
 protected:
     bool    parseUSTStrings(QStringList ustStrings);
     QString filePath;
@@ -113,6 +116,7 @@ protected:
     void applyEvent_NoteLyrics (const qtauEvent_NoteText     &event);
     void applyEvent_NoteEffects(const qtauEvent_NoteEffect   &event);
 
+    bool processEvent(qtauEvent *);
     void stackChanged();
 
     qtauSessionPlayback::EState playSt;

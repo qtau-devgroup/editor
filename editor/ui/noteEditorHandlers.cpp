@@ -66,7 +66,7 @@ void qtauEdController::deleteSelected()
         notes->selected.clear();
         lazyUpdate();
 
-        qtauEvent_NoteAddition *event = new qtauEvent_NoteAddition(v, false, true);
+        qtauEvent_NoteAddition *event = new qtauEvent_NoteAddition(v, true, true);
         eventHappened(event);
     }
 }
@@ -240,7 +240,6 @@ void qtauEdController::onNoteAdd(qtauEvent_NoteAddition *event)
     }
 
     owner->recalcNoteRects();
-
     owner->lazyUpdate();
 }
 
@@ -993,7 +992,7 @@ void qtauEd_AddNote::mouseMoveEvent(QMouseEvent *event)
     int cursorHPos = event->pos().x() + state->viewport.x();
 
     if (state->gridSnapEnabled)
-        snap(cursorHPos, minOffset, editedNote->r.x());
+        cursorHPos = snap(cursorHPos, minOffset, editedNote->r.x());
 
     int desiredRight = qMin(setup->barWidth * 128,
                             qMax(cursorHPos - 1, editedNote->r.left() + minOffset - 1));

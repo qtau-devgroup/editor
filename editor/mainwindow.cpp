@@ -644,7 +644,6 @@ void MainWindow::onPlaybackState(qtauSessionPlayback::State state)
     case qtauSessionPlayback::NeedsSynthesis:
         ui->actionPlay->setText(tr("Play"));
         ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
-        ui->actionPlay->setEnabled(false);
         ui->actionStop->setEnabled(false);
         ui->actionBack->setEnabled(false);
         ui->actionRepeat->setEnabled(false);
@@ -652,9 +651,7 @@ void MainWindow::onPlaybackState(qtauSessionPlayback::State state)
         ui->actionPlay->setChecked(false);
         ui->actionRepeat->setChecked(false);
 
-        if (state == qtauSessionPlayback::NeedsSynthesis)
-            ui->actionPlay->setEnabled(true);
-
+        ui->actionPlay->setEnabled(state == qtauSessionPlayback::NeedsSynthesis);
         break;
 
     case qtauSessionPlayback::Repeating: // this and following states imply that actions were enabled before

@@ -14,7 +14,10 @@ qtauSession::qtauSession(QObject *parent) :
     qtauEventManager(parent), docName(tr("Untitled")), isModified(false), hadSavePoint(false),
     playSt(qtauSessionPlayback::NothingToPlay)
 {
-    //
+    vocal.vocalWave = new qtauAudioSource(this);
+    music.musicWave = new qtauAudioSource(this);
+
+    data.tempo = 120;
 }
 
 qtauSession::~qtauSession()
@@ -79,6 +82,9 @@ bool qtauSession::loadUST(QString fileName)
 
                 emit dataReloaded();
                 emit onEvent(loadNotesChangeset);
+
+                if (!data.notes.isEmpty())
+                    setPlaybackState(qtauSessionPlayback::NeedsSynthesis);
 
                 delete loadNotesChangeset;
                 result = true;
@@ -220,6 +226,20 @@ void qtauSession::onUIEvent(qtauEvent *e)
 {
     if (e)
     {
+        if (processEvent(e))
+            storeEvent(e);
+
+        delete e; // if it's valid it was copied on storing, and UI should only create events anyway.
+    }
+}
+
+// process event is called from both program (ui input) and undo/redo in manager (stack change)
+bool qtauSession::processEvent(qtauEvent *e)
+{
+    bool result = false;
+
+    if (e)
+    {
         switch (e->type())
         {
         case ENoteEvents::add:
@@ -229,7 +249,7 @@ void qtauSession::onUIEvent(qtauEvent *e)
             if (ne)
             {
                 applyEvent_NoteAdded(*ne);
-                storeEvent(ne);
+                result = true;
             }
             else
                 vsLog::e("Session could not convert UI event to noteAdd");
@@ -243,7 +263,7 @@ void qtauSession::onUIEvent(qtauEvent *e)
             if (ne)
             {
                 applyEvent_NoteMoved(*ne);
-                storeEvent(ne);
+                result = true;
             }
             else
                 vsLog::e("Session could not convert UI event to noteMove");
@@ -254,10 +274,10 @@ void qtauSession::onUIEvent(qtauEvent *e)
         {
             qtauEvent_NoteResize *ne = static_cast<qtauEvent_NoteResize*>(e);
 
-            if (e)
+            if (ne)
             {
                 applyEvent_NoteResized(*ne);
-                storeEvent(ne);
+                result = true;
             }
             else
                 vsLog::e("Session could not convert UI event to noteResize");
@@ -271,7 +291,7 @@ void qtauSession::onUIEvent(qtauEvent *e)
             if (ne)
             {
                 applyEvent_NoteLyrics(*ne);
-                storeEvent(ne);
+                result = true;
             }
             else
                 vsLog::e("Session could not convert UI event to noteText");
@@ -285,7 +305,7 @@ void qtauSession::onUIEvent(qtauEvent *e)
             if (ne)
             {
                 applyEvent_NoteEffects(*ne);
-                storeEvent(ne);
+                result = true;
             }
             else
                 vsLog::e("Session could not convert UI event to noteEffect");
@@ -295,11 +315,10 @@ void qtauSession::onUIEvent(qtauEvent *e)
         default:
             vsLog::e(QString("Session received unknown event type from UI").arg(e->type()));
         }
-
-        delete e; // NOTE: it is copied on storing here, so someone somewhere should delete it
     }
-    else
-        vsLog::e("Session receved a null event from UI");
+    else vsLog::e("Session can't process a zero event! Ignoring...");
+
+    return result;
 }
 
 void qtauSession::stackChanged()
@@ -312,35 +331,43 @@ void qtauSession::stackChanged()
     emit undoStatus(canUndo());
     emit redoStatus(canRedo());
     emit modifiedStatus(isModified);
+
+    if (noteMap.isEmpty() && !music.musicWave)
+        setPlaybackState(qtauSessionPlayback::NothingToPlay);
+    else
+        setPlaybackState(qtauSessionPlayback::NeedsSynthesis);
 }
 
 void qtauSession::setSynthesizedVocal(qtauAudioSource &s)
 {
-    if (playSt == qtauSessionPlayback::NothingToPlay)
-        playSt = qtauSessionPlayback::Stopped;
-    else if (playSt != qtauSessionPlayback::Stopped)
-        emit requestStopPlayback();
-
-    if (vocal.vocalWave)
+    if (vocal.vocalWave != &s)
+    {
         delete vocal.vocalWave;
+        vocal.vocalWave = 0;
+    }
 
-    vocal.vocalWave = &s;
+    if (!vocal.vocalWave)
+        vocal.vocalWave = &s;
+
     emit vocalSet();
 }
 
 void qtauSession::setBackgroundAudio(qtauAudioSource &s)
 {
-    if (playSt == qtauSessionPlayback::NothingToPlay)
-        playSt = qtauSessionPlayback::Stopped;
-    else if (playSt != qtauSessionPlayback::Stopped)
-        emit requestStopPlayback();
-
-    if (music.musicWave)
+    if (music.musicWave != &s)
+    {
         delete music.musicWave;
+        music.musicWave = 0;
+    }
 
-    music.musicWave = &s;
+    if (!music.musicWave)
+        music.musicWave = &s;
+
     emit musicSet();
 }
+
+void qtauSession::vocalWaveWasModified() { emit vocalSet(); }
+void qtauSession::musicWaveWasModified() { emit musicSet(); }
 
 void qtauSession::setModified(bool m)
 {
