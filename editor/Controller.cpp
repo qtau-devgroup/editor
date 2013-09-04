@@ -283,6 +283,13 @@ void qtauController::onRequestStartPlayback()
         {
             playState.state = Playing;
             activeSession->setPlaybackState(qtauSessionPlayback::Playing);
+
+            if (!v.vocalWave->isOpen())
+                v.vocalWave->open(QIODevice::ReadOnly);
+
+            if (v.vocalWave->isOpen())
+                v.vocalWave->reset();
+
             player->play(v.vocalWave);
         }
     }

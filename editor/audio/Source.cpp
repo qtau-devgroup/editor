@@ -32,46 +32,105 @@ qtauAudioSource::qtauAudioSource(const SWavegenSetup &s, QObject *parent) :
     fmt.setSampleSize(16);
     fmt.setSampleType(QAudioFormat::SignedInt); // S16 LE
 
+    const int frameSize = s.stereo ? 4 : 2;
+
     open(QIODevice::WriteOnly);
-    qint64 frames = s.lengthMS * s.sampleRate / 1000;
-    buffer().reserve(frames * (s.stereo ? 4 : 2) + 1);
+    int frames = s.lengthMS * s.sampleRate / 1000;
+    buffer().reserve(frames * frameSize + 1);
 
-    unsigned char S16LE[4];
+    unsigned char S16LE[5];
+    memset(S16LE, 0, 5);
 
-    const qreal toneAmplitude = 0.8;
-    const qreal d = M_PI * 2 / s.sampleRate;
+    const int silenceFrames = 10;
+    int fr                  = silenceFrames;
+    const int framesIntro   = s.sampleRate / 20;
+    const int framesOutro   = frames - framesIntro - silenceFrames;
 
-    qreal phase = 0.0;
-    qreal phaseStep = d * s.frequencyHz;
+    const qreal d  = M_PI * 2 / s.sampleRate;
+    const qreal toneAmplitude  = 0.85;
+    const qreal ampIncPerFrame = 1.0 / framesIntro;
+    qreal introAmplitude = 0;
 
-    if (s.stereo) // moved if() up to optimize cycle a bit
+    qreal phase       = 0.0;
+    qreal colorPhase  = 0.0;
+    qreal colorPhase2 = 0.0;
+
+    qreal phaseStep       = d * s.frequencyHz;
+    qreal colorPhaseStep  = phaseStep * 2;
+    qreal colorPhase2Step = phaseStep * 5;
+
+    qreal tone1Amp = toneAmplitude * 0.8;
+    qreal tone2Amp = toneAmplitude * 0.15;
+    qreal tone3Amp = toneAmplitude * 0.05;
+
+    QByteArray silenceBA(silenceFrames * frameSize, '\0');
+    write(silenceBA);
+
+    // smooth intro
+    for (; fr < framesIntro; ++fr)
     {
-        for (int fr = 0; fr < frames; ++fr)
-        {
-            const qint16 value = toneAmplitude * qSin(phase) * 32767;
-            qToLittleEndian<qint16>(value,  S16LE);
-            qToLittleEndian<qint16>(value, &S16LE[2]);
-            write(reinterpret_cast<char*>(S16LE), 4);
+        introAmplitude += ampIncPerFrame;
 
-            phase += phaseStep;
+        const qint16 value = (introAmplitude * tone1Amp * qSin(phase)      +
+                              introAmplitude * tone2Amp * qSin(colorPhase) +
+                              introAmplitude * tone3Amp * qSin(colorPhase2)) * 32767;
 
-            while (phase > M_PI * 2)
-                phase -= M_PI * 2;
-        }
+        qToLittleEndian<qint16>(value,  S16LE);
+        qToLittleEndian<qint16>(value, &S16LE[2]);
+        write(reinterpret_cast<char*>(S16LE), frameSize);
+
+        phase += phaseStep;
+        colorPhase += colorPhaseStep;
+        colorPhase2 += colorPhase2Step;
+
+        while (phase       > M_PI * 2) phase       -= M_PI * 2;
+        while (colorPhase  > M_PI * 2) colorPhase  -= M_PI * 2;
+        while (colorPhase2 > M_PI * 2) colorPhase2 -= M_PI * 2;
     }
-    else
-        for (int fr = 0; fr < frames; ++fr)
-        {
-            const qint16 value = toneAmplitude * qSin(phase) * 32767;
-            qToLittleEndian<qint16>(value, S16LE);
-            write(reinterpret_cast<char*>(S16LE), 2);
 
-            phase += phaseStep;
+    // main part
+    for (; fr < framesOutro; ++fr)
+    {
+        const qint16 value = (tone1Amp * qSin(phase)      +
+                              tone2Amp * qSin(colorPhase) +
+                              tone3Amp * qSin(colorPhase2)) * 32767;
 
-            while (phase > M_PI * 2)
-                phase -= M_PI * 2;
-        }
+        qToLittleEndian<qint16>(value,  S16LE);
+        qToLittleEndian<qint16>(value, &S16LE[2]);
+        write(reinterpret_cast<char*>(S16LE), frameSize);
 
+        phase += phaseStep;
+        colorPhase += colorPhaseStep;
+        colorPhase2 += colorPhase2Step;
+
+        while (phase       > M_PI * 2) phase       -= M_PI * 2;
+        while (colorPhase  > M_PI * 2) colorPhase  -= M_PI * 2;
+        while (colorPhase2 > M_PI * 2) colorPhase2 -= M_PI * 2;
+    }
+
+    // smooth outro
+    for (; fr < frames; ++fr)
+    {
+        introAmplitude -= ampIncPerFrame;
+
+        const qint16 value = (introAmplitude * tone1Amp * qSin(phase)      +
+                              introAmplitude * tone2Amp * qSin(colorPhase) +
+                              introAmplitude * tone3Amp * qSin(colorPhase2)) * 32767;
+
+        qToLittleEndian<qint16>(value,  S16LE);
+        qToLittleEndian<qint16>(value, &S16LE[2]);
+        write(reinterpret_cast<char*>(S16LE), frameSize);
+
+        phase += phaseStep;
+        colorPhase += colorPhaseStep;
+        colorPhase2 += colorPhase2Step;
+
+        while (phase       > M_PI * 2) phase       -= M_PI * 2;
+        while (colorPhase  > M_PI * 2) colorPhase  -= M_PI * 2;
+        while (colorPhase2 > M_PI * 2) colorPhase2 -= M_PI * 2;
+    }
+
+    write(silenceBA);
     close();
 }
 
