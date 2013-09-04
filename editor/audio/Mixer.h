@@ -14,7 +14,7 @@ signals:
     
 public slots:
 private:
-    static inline float getValueFromBuffer(char *buffer, const QAudioFormat &fmt);
+    static void extract(QVector<float> &buffer, int sampleRate, int frameCount, int channelCount, qtauAudioSource *source);
 
 };
 
