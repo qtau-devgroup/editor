@@ -1,0 +1,9 @@
+- wav, flac io, menu option to export
+- scaling on load of huge .ust/audio
+- paged waveform, joined wave panel
+- mixer, saving mixdown
+- progress of playback
+- ui for plugins, selection of synth
+- basic settings (log n, colors, sizes)
+- threaded synth
+- streamer and threaded playback, anti-glitch and anti-buffer-underrun measures

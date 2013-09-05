@@ -14,6 +14,7 @@ class qtauWavCodec : public qtauAudioCodec
 
 public:
     bool cacheAll();
+    bool saveToDevice();
 
 protected:
     qtauWavCodec(QIODevice &d, QObject *parent = 0);
@@ -42,6 +43,7 @@ class qtauFlacCodec : public qtauAudioCodec
 
 public:
     bool cacheAll();
+    bool saveToDevice();
 
 protected:
     qtauFlacCodec(QIODevice &d, QObject *parent = 0);
@@ -64,6 +66,7 @@ class qtauOggCodec : public qtauAudioCodec
 
 public:
     bool cacheAll();
+    bool saveToDevice();
 
 protected:
     qtauOggCodec(QIODevice &d, QObject *parent = 0);

@@ -3,10 +3,15 @@
 #include <qmath.h>
 #include <qendian.h>
 
+const qreal sinTableMult = 10000.0;
+
+// supposed to have sinus values with key in radians from (int)([0..2*PI) * sinTableMult)
+qreal *sinTable = 0;
 
 qtauAudioSource::qtauAudioSource(QObject *parent) :
     QBuffer(parent)
 {
+    //
 }
 
 qtauAudioSource::qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent) :
@@ -25,6 +30,18 @@ qtauAudioSource::qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObjec
 qtauAudioSource::qtauAudioSource(const SWavegenSetup &s, QObject *parent) :
     QBuffer(parent)
 {
+    if (!sinTable)
+    {
+        int numValues = (M_PI * 2 + 1) * sinTableMult; // +1 because phases go higher than 2PI before being reduced
+        int tableLenBytes = numValues * sizeof(qreal) + 1;
+
+        sinTable = (qreal*)malloc(tableLenBytes);
+        memset(sinTable, 0, tableLenBytes);
+
+        for (int i = 0; i < numValues; ++i)
+            sinTable[i] = qSin((qreal)i / sinTableMult); // sin(0..2PI)
+    }
+
     fmt.setSampleRate(s.sampleRate);
     fmt.setChannelCount(s.stereo ? 2 : 1);
     fmt.setCodec("audio/pcm");
@@ -42,92 +59,73 @@ qtauAudioSource::qtauAudioSource(const SWavegenSetup &s, QObject *parent) :
     memset(S16LE, 0, 5);
 
     const int silenceFrames = 10;
-    int fr                  = silenceFrames;
-    const int framesIntro   = s.sampleRate / 20;
-    const int framesOutro   = frames - framesIntro - silenceFrames;
+    const int samplesInOut  = s.sampleRate / 20;
+
+    const int frSt  = silenceFrames;
+    const int frEnd = frames - silenceFrames;
+    const int frIn  = frSt + samplesInOut;
+    const int frOut = frames - frIn;
 
     const qreal d  = M_PI * 2 / s.sampleRate;
-    const qreal toneAmplitude  = 0.85;
-    const qreal ampIncPerFrame = 1.0 / framesIntro;
-    qreal introAmplitude = 0;
+    const qreal maxAmplitude   = 0.85;
+    const qreal amplitudeDelta = 1.0 / samplesInOut;
 
-    qreal phase       = 0.0;
-    qreal colorPhase  = 0.0;
-    qreal colorPhase2 = 0.0;
+    qreal percent     =  0.0;
+    qreal phase       =  0.0;
+    qreal colorPhase  =  0.1; // random small shifts to colorize wave
+    qreal colorPhase2 = -0.1;
+    qreal colorPhase3 =  0.15;
 
     qreal phaseStep       = d * s.frequencyHz;
-    qreal colorPhaseStep  = phaseStep * 2;
-    qreal colorPhase2Step = phaseStep * 5;
+    qreal colorPhaseStep  = phaseStep / 2; // lower octave harmonic to make tone less hurtful for ears
+    qreal colorPhase2Step = phaseStep * 2;
+    qreal colorPhase3Step = phaseStep * 3;
 
-    qreal tone1Amp = toneAmplitude * 0.8;
-    qreal tone2Amp = toneAmplitude * 0.15;
-    qreal tone3Amp = toneAmplitude * 0.05;
+    qreal tone1Max = maxAmplitude * 0.7;
+    qreal tone2Max = maxAmplitude * 0.15;
+    qreal tone3Max = maxAmplitude * 0.08;
+    qreal tone4Max = maxAmplitude * 0.07;
+
+    qreal tone1Amp = 0.0;
+    qreal tone2Amp = 0.0;
+    qreal tone3Amp = 0.0;
+    qreal tone4Amp = 0.0;
 
     QByteArray silenceBA(silenceFrames * frameSize, '\0');
     write(silenceBA);
 
     // smooth intro
-    for (; fr < framesIntro; ++fr)
+    for (int fr = frSt; fr < frEnd; ++fr)
     {
-        introAmplitude += ampIncPerFrame;
+        if (fr <  frIn || fr >= frOut)
+        {
+            if (fr < frIn) percent += amplitudeDelta;
+            else           percent -= amplitudeDelta;
 
-        const qint16 value = (introAmplitude * tone1Amp * qSin(phase)      +
-                              introAmplitude * tone2Amp * qSin(colorPhase) +
-                              introAmplitude * tone3Amp * qSin(colorPhase2)) * 32767;
+            tone1Amp = percent * tone1Max;
+            tone2Amp = percent * tone2Max;
+            tone3Amp = percent * tone3Max;
+            tone4Amp = percent * tone4Max;
+        }
+
+        const qint16 value = (tone1Amp * sinTable[(int)(phase       * sinTableMult)]  +
+                              tone2Amp * sinTable[(int)(colorPhase  * sinTableMult)]  +
+                              tone3Amp * sinTable[(int)(colorPhase2 * sinTableMult)]  +
+                              tone4Amp * sinTable[(int)(colorPhase3 * sinTableMult)]) * 32767;
 
         qToLittleEndian<qint16>(value,  S16LE);
         qToLittleEndian<qint16>(value, &S16LE[2]);
         write(reinterpret_cast<char*>(S16LE), frameSize);
 
-        phase += phaseStep;
-        colorPhase += colorPhaseStep;
+        phase       += phaseStep;
+        colorPhase  += colorPhaseStep;
         colorPhase2 += colorPhase2Step;
+        colorPhase3 += colorPhase3Step;
 
         while (phase       > M_PI * 2) phase       -= M_PI * 2;
         while (colorPhase  > M_PI * 2) colorPhase  -= M_PI * 2;
         while (colorPhase2 > M_PI * 2) colorPhase2 -= M_PI * 2;
-    }
-
-    // main part
-    for (; fr < framesOutro; ++fr)
-    {
-        const qint16 value = (tone1Amp * qSin(phase)      +
-                              tone2Amp * qSin(colorPhase) +
-                              tone3Amp * qSin(colorPhase2)) * 32767;
-
-        qToLittleEndian<qint16>(value,  S16LE);
-        qToLittleEndian<qint16>(value, &S16LE[2]);
-        write(reinterpret_cast<char*>(S16LE), frameSize);
-
-        phase += phaseStep;
-        colorPhase += colorPhaseStep;
-        colorPhase2 += colorPhase2Step;
-
-        while (phase       > M_PI * 2) phase       -= M_PI * 2;
-        while (colorPhase  > M_PI * 2) colorPhase  -= M_PI * 2;
-        while (colorPhase2 > M_PI * 2) colorPhase2 -= M_PI * 2;
-    }
-
-    // smooth outro
-    for (; fr < frames; ++fr)
-    {
-        introAmplitude -= ampIncPerFrame;
-
-        const qint16 value = (introAmplitude * tone1Amp * qSin(phase)      +
-                              introAmplitude * tone2Amp * qSin(colorPhase) +
-                              introAmplitude * tone3Amp * qSin(colorPhase2)) * 32767;
-
-        qToLittleEndian<qint16>(value,  S16LE);
-        qToLittleEndian<qint16>(value, &S16LE[2]);
-        write(reinterpret_cast<char*>(S16LE), frameSize);
-
-        phase += phaseStep;
-        colorPhase += colorPhaseStep;
-        colorPhase2 += colorPhase2Step;
-
-        while (phase       > M_PI * 2) phase       -= M_PI * 2;
-        while (colorPhase  > M_PI * 2) colorPhase  -= M_PI * 2;
-        while (colorPhase2 > M_PI * 2) colorPhase2 -= M_PI * 2;
+        while (colorPhase3 > M_PI * 2) colorPhase3 -= M_PI * 2;
     }
 
     write(silenceBA);

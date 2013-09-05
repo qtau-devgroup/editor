@@ -53,6 +53,7 @@ private:
 signals:
     void loadUST(QString fileName);
     void saveUST(QString fileName, bool rewrite);
+    void saveAudio(QString fileName, bool rewrite);
 
     void loadAudio(QString fileName);
     void setVolume(int);
@@ -102,6 +103,8 @@ public slots:
     void onUndoStatus(bool);
     void onRedoStatus(bool);
     void onDocEvent(qtauEvent*);
+
+    void onSaveAudioAs();
 
 protected:
     qtauSession    *doc;

@@ -40,6 +40,9 @@ public:
     // should read all contents of file/socket and decode it to PCM in buf
     virtual bool cacheAll() { return true; }
 
+    // should save all buffered pcm data to iodevice in appropriate format
+    virtual bool saveToDevice() { return false; }
+
 protected:
     QAudioFormat fmt; // format of that raw PCM data
 

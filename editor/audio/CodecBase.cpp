@@ -1,12 +1,73 @@
 #include "audio/CodecBase.h"
 #include "Utils.h"
+#include <qendian.h>
 
+//----- WAV PCM RIFF header parts -----------------------
+// all char[] must be big-endian, while all integers should be unsigned little-endian
+typedef struct SWavRiff {
+    char    chunkID[4];     // "RIFF" 0x52494646 BE
+    quint32 chunkSize;
+    char    chunkFormat[4]; // "WAVE" 0x57415645 BE
 
-typedef struct {
-    char   chunkID[4];
-    qint32 chunkSize;
-    char   chunkFormat[4];
-} riffHeader;
+    SWavRiff() {}
+
+    SWavRiff(QIODevice &/*d*/)
+    {
+        //
+    }
+
+    void saveToDevice(QIODevice &/*d*/)
+    {
+        //
+    }
+
+    bool isCorrect() { return false; }
+} wavRIFF;
+
+typedef struct SWavFmt {
+    char    fmtChunkID[4];  // "fmt"  0x666d7420 BE
+    quint32 fmtSize;
+    quint16 audioFormat;
+    quint16 numChannels;
+    quint32 sampleRate;
+    quint32 byteRate;
+    quint16 blockAlign;
+    quint16 bitsPerSample;
+
+    SWavFmt() {}
+
+    SWavFmt(QIODevice &/*d*/)
+    {
+        //
+    }
+
+    void saveToDevice(QIODevice &/*d*/)
+    {
+        //
+    }
+
+    bool isCorrect() { return false; }
+} wavFmt;
+
+typedef struct SWavData {
+    char    dataID[4];      // "data" 0x64617461 BE
+    quint32 dataSize;
+
+    SWavData() {}
+
+    SWavData(QIODevice &/*d*/)
+    {
+        //
+    }
+
+    void saveToDevice(QIODevice &/*d*/)
+    {
+        //
+    }
+
+    bool isCorrect() { return false; }
+} wavData;
+//-------------------------------------------------------
 
 
 bool qtauWavCodec::cacheAll()
@@ -20,8 +81,8 @@ bool qtauWavCodec::cacheAll()
         if (!dev->isSequential())
             dev->reset();
 
-        riffHeader riff;
-        qint64 bytesRead = dev->read((char*)&riff, sizeof(riffHeader));
+        wavRIFF riff;
+        qint64 bytesRead = dev->read((char*)&riff, sizeof(wavRIFF));
         riff.chunkSize   = read32_le((quint8*)&riff.chunkSize);
 
         if (bytesRead == 12 && riff.chunkSize > 0 &&
@@ -47,6 +108,39 @@ bool qtauWavCodec::cacheAll()
         write('\0'); // is that a reason of all those "buffer underflow"s from QAudioOutput?..
         close();
     }
+
+    return result;
+}
+
+
+bool qtauWavCodec::saveToDevice()
+{
+    bool result = false;
+
+    wavRIFF wavR;
+    wavFmt  wavF;
+    wavData wavD;
+
+    qToBigEndian<qint32>(0x52494646, (uchar*)wavR.chunkID);
+    qToBigEndian<qint32>(0x57415645, (uchar*)wavR.chunkFormat);
+    qToLittleEndian<qint32>(36 + size(), (unsigned char*)&wavR.chunkSize);
+
+    if (!dev->isOpen())
+        dev->open(QIODevice::WriteOnly);
+
+    if (dev->isOpen())
+    {
+        if (!dev->isSequential())
+            dev->reset();
+
+        dev->write((char*)&wavR, sizeof(wavR));
+        dev->write((char*)&wavF, sizeof(wavF));
+        dev->write((char*)&wavD, sizeof(wavD));
+
+        dev->write(buffer());
+        result = true;
+    }
+    else vsLog::e("Wav codec could not open iodevice for writing, saving cancelled.");
 
     return result;
 }
@@ -208,3 +302,6 @@ bool qtauWavCodec::findDataChunk()
 
 bool qtauFlacCodec::cacheAll() { return false; }
 bool qtauOggCodec::cacheAll()  { return false; }
+
+bool qtauFlacCodec::saveToDevice() { return false; }
+bool qtauOggCodec::saveToDevice()  { return false; }

@@ -26,7 +26,7 @@
      <x>0</x>
      <y>0</y>
      <width>640</width>
-     <height>21</height>
+     <height>25</height>
     </rect>
    </property>
    <widget class="QMenu" name="menuFile">
@@ -56,6 +56,7 @@
     <addaction name="separator"/>
     <addaction name="actionSave"/>
     <addaction name="actionSave_as"/>
+    <addaction name="actionSave_audio_as"/>
     <addaction name="separator"/>
     <addaction name="menuImport"/>
     <addaction name="menuExport_as"/>
@@ -293,6 +294,14 @@
   <action name="actionMIDI_2">
    <property name="text">
     <string>MIDI</string>
+   </property>
+  </action>
+  <action name="actionSave_audio_as">
+   <property name="enabled">
+    <bool>false</bool>
+   </property>
+   <property name="text">
+    <string>Save audio as...</string>
    </property>
   </action>
  </widget>

@@ -134,7 +134,7 @@ void qtauController::onSaveUST(QString fileName, bool rewrite)
         {
             if (uf.size() == 0 || rewrite)
             {
-                uf.seek(0);
+                uf.reset(); // maybe it's redundant?..
                 uf.write(activeSession->ustBinary());
                 uf.close();
 
@@ -148,6 +148,39 @@ void qtauController::onSaveUST(QString fileName, bool rewrite)
         else vsLog::e("Could not open file " + fileName + " to save UST");
     }
     else vsLog::e("Trying to save ust from empty session!");
+}
+
+void qtauController::onSaveAudio(QString fileName, bool rewrite)
+{
+    if (activeSession && activeSession->getVocal().vocalWave->size() > 0)
+    {
+        QFile af(fileName);
+
+        if (af.open(QFile::WriteOnly))
+        {
+            if (af.size() == 0 || rewrite)
+            {
+                af.reset();
+                qtauAudioCodec *codec = codecForExt(QFileInfo(fileName).suffix(), af, this);
+
+                if (codec)
+                {
+                    // TODO: mixdown of vocal + bgm?
+
+                    codec->saveToDevice();
+                    delete codec;
+
+                    vsLog::s("Audio saved: " + fileName);
+                }
+                else vsLog::e("No codec for " + fileName);
+
+                af.close();
+            }
+            else vsLog::e("File " + fileName + " is not empty, rewriting cancelled");
+        }
+        else vsLog::e("Could not open file " + fileName + " to save audio");
+    }
+    else vsLog::e("Trying to save audio from empty session!");
 }
 
 

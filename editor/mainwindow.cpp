@@ -473,6 +473,8 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionEdit_Mode, SIGNAL(triggered(bool)), SLOT(onEditMode(bool)));
     connect(ui->actionGrid_Snap, SIGNAL(triggered(bool)), SLOT(onGridSnap(bool)));
 
+    connect(ui->actionSave_audio_as, SIGNAL(triggered()), SLOT(onSaveAudioAs()));
+
     vsLog::instance()->enableHistory(false);
     vsLog::s(QString("Launching QTau %1 @ %2").arg(QTAU_VERSION).arg(__DATE__));
 
@@ -513,8 +515,9 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
 
     //-----------------------------------------------------------------------
 
-    connect(this, SIGNAL(loadUST(QString)),      &c, SLOT(onLoadUST(QString)));
-    connect(this, SIGNAL(saveUST(QString,bool)), &c, SLOT(onSaveUST(QString,bool)));
+    connect(this, SIGNAL(loadUST(QString)),        &c, SLOT(onLoadUST(QString)));
+    connect(this, SIGNAL(saveUST(QString,bool)),   &c, SLOT(onSaveUST(QString,bool)));
+    connect(this, SIGNAL(saveAudio(QString,bool)), &c, SLOT(onSaveAudio(QString,bool)));
 
     connect(this, SIGNAL(loadAudio(QString)),    &c, SLOT(onLoadAudio(QString)));
     connect(volume, SIGNAL(valueChanged(int)),   &c, SLOT(onVolumeChanged(int)));
@@ -558,6 +561,15 @@ void MainWindow::onSaveUSTAs()
 
     if (!fileName.isEmpty())
         emit saveUST(fileName, true);
+}
+
+void MainWindow::onSaveAudioAs()
+{
+    QString fileName = QFileDialog::getSaveFileName(this,
+        tr("Save Wave"), "", tr("WAV PCM files (*.wav)"));
+
+    if (!fileName.isEmpty())
+        emit saveAudio(fileName, true);
 }
 
 void MainWindow::notesVScrolled(int delta)
@@ -647,6 +659,7 @@ void MainWindow::onPlaybackState(qtauSessionPlayback::State state)
         ui->actionStop->setEnabled(false);
         ui->actionBack->setEnabled(false);
         ui->actionRepeat->setEnabled(false);
+        ui->actionSave_audio_as->setEnabled(false);
 
         ui->actionPlay->setChecked(false);
         ui->actionRepeat->setChecked(false);
@@ -661,6 +674,7 @@ void MainWindow::onPlaybackState(qtauSessionPlayback::State state)
         ui->actionStop->setEnabled(true);
         ui->actionBack->setEnabled(true);
         ui->actionRepeat->setEnabled(true);
+        ui->actionSave_audio_as->setEnabled(true);
         break;
 
     case qtauSessionPlayback::Stopped:
@@ -669,6 +683,7 @@ void MainWindow::onPlaybackState(qtauSessionPlayback::State state)
     case qtauSessionPlayback::Paused:
         ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
         ui->actionPlay->setText(tr("Play"));
+        ui->actionSave_audio_as->setEnabled(true);
         break;
 
     default:
@@ -925,8 +940,6 @@ void MainWindow::onVocalAudioChanged()
     // show vocal waveform panel and send audioSource to it for generation
     vocalWavePanel->setVisible(true);
     vocalWave->setAudio(doc->getVocal().vocalWave);
-
-    ui->actionPlay->setEnabled(true); // it isn't at startup because nothing to play
 }
 
 void MainWindow::onMusicAudioChanged()
@@ -934,8 +947,6 @@ void MainWindow::onMusicAudioChanged()
     // show & fill music waveform panel
     musicWavePanel->setVisible(true);
     musicWave->setAudio(doc->getMusic().musicWave);
-
-    ui->actionPlay->setEnabled(true);
 }
 
 void MainWindow::dragEnterEvent(QDragEnterEvent *event)

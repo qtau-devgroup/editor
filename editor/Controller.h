@@ -1,3 +1,4 @@
+
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 
@@ -34,6 +35,7 @@ public slots:
     void onSaveUST(QString fileName, bool rewrite);
 
     void onLoadAudio(QString fileName);
+    void onSaveAudio(QString fileName, bool rewrite);
     void onAudioPlaybackEnded();
 
     void onRequestSynthesis();
