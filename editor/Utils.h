@@ -92,13 +92,6 @@ protected:
 
 int snap(int value, int unit, int baseValue = 0);  /// baseValue % unit is added to result
 
-
-inline quint16 read16_le(const quint8* b) { return b[0] + (b[1] << 8); }
-inline quint16 read16_be(const quint8* b) { return (b[0] << 8) + b[1]; }
-inline quint32 read32_le(const quint8* b) { return read16_le(b) + (read16_le(b + 2) << 16); }
-inline quint32 read32_be(const quint8* b) { return (read16_be(b) << 16) + read16_be(b + 2); }
-
-
 namespace qtauSessionPlayback {
     typedef enum State {
         NothingToPlay = 0,

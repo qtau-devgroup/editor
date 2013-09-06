@@ -70,11 +70,11 @@ qtauAudioSource::qtauAudioSource(const SWavegenSetup &s, QObject *parent) :
     const qreal maxAmplitude   = 0.85;
     const qreal amplitudeDelta = 1.0 / samplesInOut;
 
-    qreal percent     =  0.0;
-    qreal phase       =  0.0;
-    qreal colorPhase  =  0.1; // random small shifts to colorize wave
-    qreal colorPhase2 = -0.1;
-    qreal colorPhase3 =  0.15;
+    qreal percent     = 0.0;
+    qreal phase       = 0.1;
+    qreal colorPhase  = 0.2; // random small shifts to colorize wave, should be >0
+    qreal colorPhase2 = 0.0;
+    qreal colorPhase3 = 0.25;
 
     qreal phaseStep       = d * s.frequencyHz;
     qreal colorPhaseStep  = phaseStep / 2; // lower octave harmonic to make tone less hurtful for ears

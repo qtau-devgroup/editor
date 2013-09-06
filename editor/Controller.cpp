@@ -6,7 +6,10 @@
 #include "Utils.h"
 
 #include "audio/Player.h"
-#include "audio/CodecBase.h"
+#include "audio/codecs/Wav.h"
+#include "audio/codecs/AIFF.h"
+#include "audio/codecs/Flac.h"
+#include "audio/codecs/Ogg.h"
 
 #include <QApplication>
 #include <QPluginLoader>
@@ -15,9 +18,11 @@
 qtauController::qtauController(QObject *parent) :
     QObject(parent), activeSession(0)
 {
-    qtauCodecRegistry::instance()->addCodec(new qtauWavCodecFactory());
-    //qtauCodecRegistry::instance()->addCodec(new qtauFlacCodecFactory());
-    //qtauCodecRegistry::instance()->addCodec(new qtauOggCodecFactory());
+    qtauCodecRegistry *cr = qtauCodecRegistry::instance();
+    cr->addCodec(new qtauWavCodecFactory ());
+    cr->addCodec(new qtauAIFFCodecFactory());
+    cr->addCodec(new qtauFlacCodecFactory());
+    cr->addCodec(new qtauOggCodecFactory ());
 
     player = new qtmmPlayer(this);
 
@@ -167,6 +172,10 @@ void qtauController::onSaveAudio(QString fileName, bool rewrite)
                 {
                     // TODO: mixdown of vocal + bgm?
 
+                    // TODO: copy audio data when file io will be threaded
+                    qtauAudioSource *v = activeSession->getVocal().vocalWave;
+                    codec->setAudioFormat(v->getAudioFormat());
+                    codec->buffer() = v->buffer();
                     codec->saveToDevice();
                     delete codec;
 

@@ -61,21 +61,19 @@ bool qtauCodecRegistry::addCodec(qtauAudioCodecFactory *factory, bool replace)
         {
             if (alreadyRegistered)
             {
-                vsLog::i(QString("Replacing codec for %1").arg(mime));
+                vsLog::i(QString("Replacing codec for %1: %2").arg(mime).arg(factory->desc()));
                 delete codecsByMime[mime];
             }
             else
-                vsLog::i(QString("Setting codec for %1").arg(mime));
+                vsLog::i(QString("Setting codec for %1: %2").arg(mime).arg(factory->desc()));
 
             codecsByMime[mime] = factory;
             codecsByExt[factory->ext()] = factory;
             result = true;
         }
-        else
-            vsLog::e(QString("Codec for %1 is already registered, won't replace").arg(mime));
+        else vsLog::e(QString("Codec for %1 is already registered, won't replace").arg(mime));
     }
-    else
-        vsLog::e("Trying to register codec without MIME type!");
+    else vsLog::e("Trying to register codec without MIME type!");
 
     return result;
 }

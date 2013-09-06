@@ -25,8 +25,11 @@ SOURCES += \
     audio/Player.cpp \
     audio/Mixer.cpp \
     audio/Codec.cpp \
-    audio/CodecBase.cpp \
-    ../tools/utauloid/ust.cpp
+    ../tools/utauloid/ust.cpp \
+    audio/codecs/Wav.cpp \
+    audio/codecs/AIFF.cpp \
+    audio/codecs/Flac.cpp \
+    audio/codecs/Ogg.cpp
 
 HEADERS  += \
     mainwindow.h \
@@ -47,8 +50,11 @@ HEADERS  += \
     audio/Player.h \
     audio/Mixer.h \
     audio/Codec.h \
-    audio/CodecBase.h \
-    ../tools/utauloid/ust.h
+    ../tools/utauloid/ust.h \
+    audio/codecs/Wav.h \
+    audio/codecs/AIFF.h \
+    audio/codecs/Flac.h \
+    audio/codecs/Ogg.h
 
 FORMS += ui/mainwindow.ui
 
@@ -56,7 +62,7 @@ RESOURCES += res/qtau.qrc
 
 windows:RC_FILE = res/qtau_win.rc
 
-QMAKE_CXXFLAGS += -Wunused-parameter
+QMAKE_CXXFLAGS += -Wall -std=c++11
 
 #--------------------------------------------
 CONFIG(debug, debug|release) {

@@ -22,12 +22,14 @@ public:
     virtual qtauAudioCodec* make(QIODevice &d, QObject *parent = 0) = 0;
     virtual ~qtauAudioCodecFactory() {}
 
-    const QString &ext () const { return _ext;  }
-    const QString &mime() const { return _mime; }
+    const QString& ext () const { return _ext;  }
+    const QString& mime() const { return _mime; }
+    const QString& desc() const { return _desc; }
 
 protected:
     QString _ext;
     QString _mime;
+    QString _desc;
 
 };
 
