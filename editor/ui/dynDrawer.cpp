@@ -1,3 +1,5 @@
+/* dynDrawer.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "ui/dynDrawer.h"
 #include "ui/Config.h"
 

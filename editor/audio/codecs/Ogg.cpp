@@ -1,3 +1,5 @@
+/* Ogg.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "audio/codecs/Ogg.h"
 #include "Utils.h"
 

@@ -1,3 +1,5 @@
+/* AIFF.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef QTAU_CODEC_AIFF_H
 #define QTAU_CODEC_AIFF_H
 
@@ -14,6 +16,12 @@ public:
 
 protected:
     qtauAIFFCodec(QIODevice &d, QObject *parent = 0);
+
+    bool findCommonChunk();
+    bool findSoundChunk();
+
+    quint64 _data_chunk_location;  // bytes
+    int     _data_chunk_length;    // in frames
 
 };
 

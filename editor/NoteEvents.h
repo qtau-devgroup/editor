@@ -1,3 +1,5 @@
+/* NoteEvents.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef NOTEEVENTS_H
 #define NOTEEVENTS_H
 

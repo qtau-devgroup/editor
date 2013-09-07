@@ -1,3 +1,5 @@
+/* noteEditorHandlers.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef NOTEEDITORHANDLERS_H
 #define NOTEEDITORHANDLERS_H
 

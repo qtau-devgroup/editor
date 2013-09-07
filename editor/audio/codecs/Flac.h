@@ -1,3 +1,5 @@
+/* Flac.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef QTAU_CODEC_FLAC_H
 #define QTAU_CODEC_FLAC_H
 

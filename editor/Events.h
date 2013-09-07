@@ -1,3 +1,5 @@
+/* Events.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef EVENTS_H
 #define EVENTS_H
 

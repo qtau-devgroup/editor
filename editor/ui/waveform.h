@@ -1,3 +1,5 @@
+/* waveform.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef WAVEFORM_H
 #define WAVEFORM_H
 

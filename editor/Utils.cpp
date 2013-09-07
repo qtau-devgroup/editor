@@ -1,3 +1,5 @@
+/* Utils.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "Utils.h"
 #include <QTime>
 #include <qmath.h>

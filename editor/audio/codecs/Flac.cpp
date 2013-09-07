@@ -1,3 +1,5 @@
+/* Flac.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "audio/codecs/Flac.h"
 #include "Utils.h"
 

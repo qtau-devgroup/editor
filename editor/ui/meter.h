@@ -1,3 +1,5 @@
+/* meter.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef METER_H
 #define METER_H
 

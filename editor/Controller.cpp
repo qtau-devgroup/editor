@@ -1,3 +1,5 @@
+/* Controller.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "mainwindow.h"
 
 #include "Session.h"

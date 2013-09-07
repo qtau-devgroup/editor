@@ -1,3 +1,5 @@
+/* Session.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "Session.h"
 #include "Utils.h"
 #include "audio/Source.h"

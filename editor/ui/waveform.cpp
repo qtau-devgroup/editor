@@ -1,3 +1,5 @@
+/* waveform.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "ui/waveform.h"
 #include "ui/Config.h"
 #include "audio/Source.h"

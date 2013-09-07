@@ -1,3 +1,5 @@
+/* ust.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef UST_H
 #define UST_H
 

@@ -1,3 +1,5 @@
+/* Utils.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef UTILS_H
 #define UTILS_H
 
@@ -102,6 +104,27 @@ namespace qtauSessionPlayback {
         Repeating
     } EState;
 }
+
+// 80 bit float to uint32
+inline quint32 readLD_be(const char* b)
+{
+    quint32 mantissa;
+    memcpy(&mantissa, b + 2, 4);
+    quint8 exp = 30 - b[1];
+    quint32 last = 0;
+
+    while (exp--)
+    {
+        last = mantissa;
+        mantissa >>= 1;
+    }
+
+    if (last & 0x1)
+        mantissa++;
+
+    return mantissa;
+}
+
 
 // conversion table of pianoroll keyboard key code (C1-B7) to fundamental frequency
 //float *semitoneToFrequency[] = { 0, // skip index 0 since note numbers start from 1

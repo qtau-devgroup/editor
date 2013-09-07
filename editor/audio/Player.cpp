@@ -1,3 +1,5 @@
+/* Player.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "audio/Player.h"
 #include "audio/Source.h"
 #include "Utils.h"

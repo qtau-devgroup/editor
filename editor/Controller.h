@@ -1,3 +1,4 @@
+/* Controller.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
 
 #ifndef CONTROLLER_H
 #define CONTROLLER_H

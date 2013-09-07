@@ -1,3 +1,5 @@
+/* Wav.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "audio/codecs/Wav.h"
 #include "Utils.h"
 #include <qendian.h>
@@ -213,6 +215,7 @@ typedef struct SWavData {
     }
 
     bool isCorrect() { return !memcmp(dataID, "data", 4) && dataSize > 0; }
+
 } wavData;
 
 //-------------------------------------------------------
@@ -220,12 +223,10 @@ typedef struct SWavData {
 
 bool qtauWavCodec::cacheAll()
 {
-    // read all contents of iodevice into buffer, make format from riff header and cut it from pcm data
     bool result = false;
 
     if (dev->bytesAvailable() > 0)
     {
-        // read the RIFF header
         if (!dev->isSequential())
             dev->reset();
 
@@ -248,7 +249,7 @@ bool qtauWavCodec::cacheAll()
         fmt.setByteOrder(QAudioFormat::LittleEndian);
 
         open(QIODevice::WriteOnly);
-        write(dev->readAll());
+        write(dev->read(_data_chunk_length * fmt.sampleSize() * 8 / fmt.channelCount()));
         close();
     }
 
@@ -264,10 +265,10 @@ bool qtauWavCodec::saveToDevice()
     wavFmt  wavF(fmt);
     wavData wavD(size());
 
-    if (!dev->isOpen())
+    if (!dev->isWritable())
         dev->open(QIODevice::WriteOnly);
 
-    if (dev->isOpen())
+    if (dev->isWritable())
     {
         if (!dev->isSequential())
             dev->reset();
@@ -276,7 +277,7 @@ bool qtauWavCodec::saveToDevice()
         dev->write((char*)&wavF, sizeof(wavF));
         dev->write((char*)&wavD, sizeof(wavD));
 
-        dev->write(buffer());
+        dev->write(buffer()); // don't close device because who knows what is it - could end badly if it was a socket
         result = true;
     }
     else vsLog::e("Wav codec could not open iodevice for writing, saving cancelled.");
@@ -288,7 +289,7 @@ bool qtauWavCodec::saveToDevice()
 qtauWavCodec::qtauWavCodec(QIODevice &d, QObject *parent) :
     qtauAudioCodec(d, parent)
 {
-    if (!d.isOpen())
+    if (!d.isReadable())
         vsLog::e("Wav codec got a closed io device!");
 }
 
@@ -307,7 +308,10 @@ bool qtauWavCodec::findFormatChunk()
 
         if (wf.isCorrect())
         {
-            fmt.setSampleType ((wf.bitsPerSample == 8) ? QAudioFormat::UnSignedInt : QAudioFormat::SignedInt);
+            if      (wf.bitsPerSample == 8)  fmt.setSampleType(QAudioFormat::UnSignedInt);
+            else if (wf.bitsPerSample == 32) fmt.setSampleType(QAudioFormat::Float);
+            else                             fmt.setSampleType(QAudioFormat::SignedInt);
+
             fmt.setSampleSize  (wf.bitsPerSample);
             fmt.setChannelCount(wf.numChannels  );
             fmt.setSampleRate  (wf.sampleRate   );
@@ -357,7 +361,7 @@ bool qtauWavCodec::findDataChunk()
         if (wd.isCorrect())
         {
             _data_chunk_location = dev->pos();
-            _data_chunk_length   = wd.dataSize / fmt.sampleSize() / 8;
+            _data_chunk_length   = wd.dataSize / (fmt.sampleSize() / 8 * fmt.channelCount());
 
             result = true;
             break;

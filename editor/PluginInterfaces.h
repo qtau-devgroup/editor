@@ -1,3 +1,5 @@
+/* PluginInterfaces.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef PLUGININTERFACES_H
 #define PLUGININTERFACES_H
 

@@ -1,3 +1,5 @@
+/* Codec.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "audio/Codec.h"
 #include "Utils.h"
 
@@ -51,7 +53,7 @@ bool qtauCodecRegistry::addCodec(qtauAudioCodecFactory *factory, bool replace)
     bool result = false;
 
     if (!factory)
-        vsLog::e("Trying to register codec without a factory");
+        vsLog::e("Trying to register a codec without a factory");
     else if (!factory->mime().isEmpty())
     {
         QString mime = factory->mime();
@@ -64,8 +66,7 @@ bool qtauCodecRegistry::addCodec(qtauAudioCodecFactory *factory, bool replace)
                 vsLog::i(QString("Replacing codec for %1: %2").arg(mime).arg(factory->desc()));
                 delete codecsByMime[mime];
             }
-            else
-                vsLog::i(QString("Setting codec for %1: %2").arg(mime).arg(factory->desc()));
+            else vsLog::i(QString("Adding codec for %1: %2").arg(mime).arg(factory->desc()));
 
             codecsByMime[mime] = factory;
             codecsByExt[factory->ext()] = factory;

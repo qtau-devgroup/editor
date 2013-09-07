@@ -1,3 +1,5 @@
+/* piano.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "ui/piano.h"
 #include <qevent.h>
 #include <qpainter.h>

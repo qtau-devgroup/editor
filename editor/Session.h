@@ -1,3 +1,5 @@
+/* Session.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef SESSION_H
 #define SESSION_H
 

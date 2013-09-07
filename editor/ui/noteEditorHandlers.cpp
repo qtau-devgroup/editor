@@ -1,3 +1,5 @@
+/* noteEditorHandlers.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "ui/noteEditorHandlers.h"
 #include "ui/noteEditor.h"
 #include "NoteEvents.h"

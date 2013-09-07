@@ -1,3 +1,5 @@
+/* ust.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #include "utauloid/ust.h"
 #include <QRegExp>
 #include <QDebug>

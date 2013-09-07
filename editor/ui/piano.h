@@ -1,3 +1,5 @@
+/* piano.h from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
+
 #ifndef PIANO_H
 #define PIANO_H
 
