@@ -2,6 +2,8 @@
 
 #include "audio/codecs/AIFF.h"
 #include "Utils.h"
+#include "audio/Resampler.h"
+
 #include <qendian.h>
 #include <qmath.h>
 
@@ -274,12 +276,16 @@ bool qtauAIFFCodec::cacheAll()
         fmt.setByteOrder(QAudioFormat::BigEndian);
         fmt.setSampleType(QAudioFormat::SignedInt);
 
-        open(QIODevice::WriteOnly);
+        QAudioFormat preferredFmt = fmt;
+        preferredFmt.setByteOrder(QAudioFormat::LittleEndian);
+        preferredFmt.setSampleSize(16);
+        preferredFmt.setSampleType(QAudioFormat::SignedInt);
 
-        qint64 toRead = _data_chunk_length * fmt.sampleSize() / 8 * fmt.channelCount();
-        // TODO: convert to little-endian to simplify mixing
+        qtauResampler rsmp(dev->read(_data_chunk_length * fmt.sampleSize() / 8 * fmt.channelCount()), fmt, preferredFmt);
+        fmt = preferredFmt;
 
-        write(dev->read(toRead));
+        open(QIODevice::ReadWrite);
+        write(rsmp.encode());
         close();
     }
 
@@ -307,9 +313,16 @@ bool qtauAIFFCodec::saveToDevice()
         dev->write((char*)&aiffC, sizeof(aiffC));
         dev->write((char*)&aiffD, sizeof(aiffD));
 
-        // TODO: convert from little-endian to BE if buffer is in LE
+        QAudioFormat aiffSaveFormat; // always saving aiff as S16 BE whatever buffer may hold
+        aiffSaveFormat.setByteOrder(QAudioFormat::BigEndian);
+        aiffSaveFormat.setChannelCount(fmt.channelCount());
+        aiffSaveFormat.setSampleRate(fmt.sampleRate());
+        aiffSaveFormat.setSampleSize(16);
+        aiffSaveFormat.setSampleType(QAudioFormat::SignedInt);
 
-        dev->write(buffer()); // don't close device because who knows what is it - could end badly if it was a socket
+        qtauResampler rsmp(buffer(), fmt, aiffSaveFormat);
+        dev->write(rsmp.encode()); // don't close device because who knows what is it - could end badly if it was a socket
+
         result = true;
     }
     else vsLog::e("AIFF codec could not open iodevice for writing, saving cancelled.");
