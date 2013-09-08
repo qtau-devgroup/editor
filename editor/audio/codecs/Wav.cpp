@@ -36,7 +36,7 @@ typedef struct SWavRiff {
             if (readBytes == 12)
                 chunkSize = qFromLittleEndian<quint32>((uchar*)&chunkSize);
             else
-                clear();
+                memset(chunkID, 0, 4);
         }
         else vsLog::e("Can't read WAV RIFF header from a closed device.");
     }
@@ -130,7 +130,7 @@ typedef struct SWavFmt {
             }
 
             if (!readOK)
-                clear();
+                memset(fmtChunkID, 0, 4);
         }
         else vsLog::e("Can't read Wav Fmt chunk from a closed device.");
     }
@@ -192,7 +192,7 @@ typedef struct SWavData {
             if (readBytes == 8)
                 dataSize = qFromLittleEndian<quint32>((uchar*)&dataSize);
             else
-                clear();
+                memset(dataID, 0, 4);
         }
         else vsLog::e("Can't read WAV data chunk header from a closed device.");
     }
@@ -249,7 +249,7 @@ bool qtauWavCodec::cacheAll()
         fmt.setByteOrder(QAudioFormat::LittleEndian);
 
         open(QIODevice::WriteOnly);
-        write(dev->read(_data_chunk_length * fmt.sampleSize() * 8 / fmt.channelCount()));
+        write(dev->read(_data_chunk_length * fmt.sampleSize() / 8 * fmt.channelCount()));
         close();
     }
 
@@ -289,7 +289,7 @@ bool qtauWavCodec::saveToDevice()
 qtauWavCodec::qtauWavCodec(QIODevice &d, QObject *parent) :
     qtauAudioCodec(d, parent)
 {
-    if (!d.isReadable())
+    if (!d.isOpen())
         vsLog::e("Wav codec got a closed io device!");
 }
 

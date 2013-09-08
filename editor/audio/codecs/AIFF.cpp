@@ -3,6 +3,32 @@
 #include "audio/codecs/AIFF.h"
 #include "Utils.h"
 #include <qendian.h>
+#include <qmath.h>
+
+
+// 80 bit float to uint32
+inline quint32 readLD_be(uchar* b)
+{
+    quint16 exp = qFromBigEndian<quint16>(b);
+    quint64 mnt = qFromBigEndian<quint64>(b + 2);
+    return ldexp(mnt, exp - 16383 - 63);
+}
+
+inline void writeLD_be(const quint32 &val, uchar* b)
+{
+    union di64 {
+        double  d;
+        quint64 i;
+    };
+
+    di64 di;
+    di.d = val;
+    quint16 exp = (di.i >> 52) + (16383 - 1023);
+    quint64 one = 1;
+    quint64 mnt = one << 63 | val << 11;
+    qToBigEndian<quint16>(exp, b);
+    qToBigEndian<quint64>(mnt, b + 2);
+}
 
 
 typedef struct SAIFFHeader {
@@ -28,8 +54,10 @@ typedef struct SAIFFHeader {
     {
         if (d.isReadable())
         {
-            if (d.read(chunkID, 12) != 12)
-                clear();
+            if (d.read(chunkID, 12) == 12)
+                chunkSize = qFromBigEndian<qint32>((uchar*)&chunkSize);
+            else
+                memset(chunkID, 0, 4);
         }
         else vsLog::e("Can't read AIFF header from a closed device.");
     }
@@ -39,7 +67,14 @@ typedef struct SAIFFHeader {
         if (d.isWritable())
         {
             if (isCorrect())
-                d.write(chunkID, 12);
+            {
+                char chSbuf[4];
+                qToBigEndian<qint32>(chunkSize, (uchar*)chSbuf);
+
+                d.write(chunkID,  4);
+                d.write(chSbuf,   4);
+                d.write(formType, 12);
+            }
             else
                 vsLog::e("AIFF header is incorrect, writing to device is cancelled.");
         }
@@ -56,13 +91,14 @@ typedef struct SAIFFHeader {
 typedef struct SAIFFCommon {
     char    fmtChunkID[4];  // "COMM"
     qint32  fmtSize;
-    qint16  numChannels;
-    quint32 numSampleFrames;
-    qint16  sampleSize;
-    quint32 sampleRate;
-    char    _pad[6]; // common chunk size should be 18 bytes
+    char    fmtFields[18];  // gcc doesn't like mix of variables of different size and aligns them, making gaps
 
-    void clear() { memset(fmtChunkID, 0, sizeof(SAIFFCommon)); }
+    qint16      numChannels;        // 2
+    quint32     numSampleFrames;    // 4
+    qint16      sampleSize;         // 2
+    long double sampleRate;         // 10
+
+    void clear() { memset(fmtChunkID, 0, 26); }
 
     SAIFFCommon() { clear(); }
 
@@ -86,14 +122,21 @@ typedef struct SAIFFCommon {
             // all aiff chunks have same structure of 8 first bytes: char[4] + uint32 size
             // in case this is a wrong chunk being read, read just 8 first bytes and check them - used in findFormatChunk()
             qint64 readBytes = d.read(fmtChunkID, 8);
+            fmtSize = qFromBigEndian<qint32>((uchar*)&fmtSize);
 
-            if (readBytes == 8 && !memcmp(fmtChunkID, "COMM", 4) && fmtSize > 0)
-                readOK = d.read((char*)&numChannels, 18) == 18;
+            if (readBytes == 8 && isCorrect())
+                if (d.read(fmtFields, 18) == 18)
+                {
+                    numChannels     = qFromBigEndian<qint16> ((uchar*)fmtFields);
+                    numSampleFrames = qFromBigEndian<quint32>((uchar*)fmtFields + 2);
+                    sampleSize      = qFromBigEndian<quint16>((uchar*)fmtFields + 6);
+                    sampleRate      = readLD_be              ((uchar*)fmtFields + 8); // from 80bit float to uint32
 
-            if (readOK)
-                sampleRate = readLD_be((char*)&sampleRate); // from 80bit float to uint32
-            else
-                clear();
+                    readOK = true;
+                }
+
+            if (!readOK)
+                memset(fmtChunkID, 0, 4);
         }
         else vsLog::e("Can't read AIFF common chunk from a closed device.");
     }
@@ -104,15 +147,19 @@ typedef struct SAIFFCommon {
         {
             if (isCorrect())
             {
-                d.write(fmtChunkID, 16);
-                char extendedPlusPad[10];
-                memset(extendedPlusPad, 0, 10);
+                uchar beInts[22];
+                memset(beInts, 0, 22);
 
-                // TODO: encode uint32 to 80bit float manually
-                d.write(extendedPlusPad, 10);
+                qToBigEndian<qint32> (fmtSize,         beInts);
+                qToBigEndian<qint16> (numChannels,     beInts + 4);
+                qToBigEndian<quint32>(numSampleFrames, beInts + 6);
+                qToBigEndian<qint16> (sampleSize,      beInts + 10);
+                writeLD_be           (sampleRate,      beInts + 12); // 12 + 10 == 22
+
+                d.write(fmtChunkID, 4);
+                d.write((char*)beInts, 22);
             }
-            else
-                vsLog::e("AIFF common chunk is incorrect, writing to device cancelled.");
+            else vsLog::e("AIFF common chunk is incorrect, writing to device cancelled.");
         }
         else vsLog::e("Can't write AIFF common chunk to a closed device.");
     }
@@ -147,12 +194,19 @@ typedef struct SAIFFData {
         if (d.isReadable())
         {
             bool readOK = false;
+            qint64 readBytes = d.read(chunkID, 8);
+            chunkSize = qFromBigEndian<qint32>((uchar*)&chunkSize);
 
-            if (d.read(chunkID, 8) == 8)
-                readOK = d.read((char*)&offset, 8) == 8;
+            if (readBytes == 8 && isCorrect())
+                if (d.read((char*)&offset, 8) == 8)
+                {
+                    offset    = qFromBigEndian<quint32>((uchar*)&offset);
+                    blockSize = qFromBigEndian<quint32>((uchar*)&blockSize);
+                    readOK = true;
+                }
 
             if (!readOK)
-                clear();
+                memset(chunkID, 0, 4);
         }
         else vsLog::e("Can't read AIFF data chunk header from a closed device.");
     }
@@ -162,7 +216,14 @@ typedef struct SAIFFData {
         if (d.isWritable())
         {
             if (isCorrect())
-                d.write(chunkID, sizeof(SAIFFData));
+            {
+                uchar beInts[12];
+                memset(beInts, 0, 12);
+                qToBigEndian<qint32> (chunkSize, beInts);
+
+                d.write(chunkID, 4);
+                d.write((char*)beInts, 12);
+            }
             else
                 vsLog::e("AIFF data chunk header is incorrect, writing to device is cancelled.");
         }
@@ -180,7 +241,7 @@ typedef struct SAIFFData {
 qtauAIFFCodec::qtauAIFFCodec(QIODevice &d, QObject *parent) :
     qtauAudioCodec(d, parent)
 {
-    if (!d.isReadable())
+    if (!d.isOpen())
         vsLog::e("AIFF codec got a closed io device!");
 }
 
@@ -210,10 +271,15 @@ bool qtauAIFFCodec::cacheAll()
             dev->seek(_data_chunk_location); // else it should already be there
 
         fmt.setCodec("audio/pcm");
-        fmt.setByteOrder(QAudioFormat::LittleEndian);
+        fmt.setByteOrder(QAudioFormat::BigEndian);
+        fmt.setSampleType(QAudioFormat::SignedInt);
 
         open(QIODevice::WriteOnly);
-        write(dev->read(_data_chunk_length * fmt.sampleSize() * 8));
+
+        qint64 toRead = _data_chunk_length * fmt.sampleSize() / 8 * fmt.channelCount();
+        // TODO: convert to little-endian to simplify mixing
+
+        write(dev->read(toRead));
         close();
     }
 
@@ -240,6 +306,8 @@ bool qtauAIFFCodec::saveToDevice()
         dev->write((char*)&aiffH, sizeof(aiffH));
         dev->write((char*)&aiffC, sizeof(aiffC));
         dev->write((char*)&aiffD, sizeof(aiffD));
+
+        // TODO: convert from little-endian to BE if buffer is in LE
 
         dev->write(buffer()); // don't close device because who knows what is it - could end badly if it was a socket
         result = true;
@@ -288,7 +356,7 @@ bool qtauAIFFCodec::findCommonChunk()
 
             if (!skippedChunk)
             {
-                vsLog::e("AIFF codec could not skip a wrong chunk in findFormatChunk(). AIFF reading failed then.");
+                vsLog::e("AIFF codec could not skip a wrong chunk in findCommonChunk(). AIFF reading failed then.");
                 break;
             }
         }
@@ -313,7 +381,7 @@ bool qtauAIFFCodec::findSoundChunk()
         if (ad.isCorrect())
         {
             _data_chunk_location = dev->pos();
-            _data_chunk_length   = (ad.chunkSize - 8) / (fmt.sampleSize() / 8);
+            _data_chunk_length   = (ad.chunkSize - 8) / (fmt.sampleSize() / 8 * fmt.channelCount());
 
             result = true;
             break;
@@ -335,7 +403,7 @@ bool qtauAIFFCodec::findSoundChunk()
 
             if (!skippedChunk)
             {
-                vsLog::e("AIFF codec could not skip a wrong chunk in findDataChunk(). AIFF reading failed then.");
+                vsLog::e("AIFF codec could not skip a wrong chunk in findSoundChunk(). AIFF reading failed then.");
                 break;
             }
         }
