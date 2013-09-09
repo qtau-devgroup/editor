@@ -5,11 +5,15 @@ see LICENSE
 ffft by Laurent de Soras http://ldesoras.free.fr/
 licensed under strictest terms of WTFPL
 
+flac and ogg libs from http://www.xiph.org/downloads/
+both licensed under BSD
+
 Application icon pixelart: Ouka Alice by sn0w75
 http://twitter.com/sn0w75
 
 Icon set "Super Mono Sticker" by Double-J designs
 http://www.doublejdesign.co.uk/2010/07/super-mono-icons/
+licensed under Creative Commons Attribution 3.0
 
 Qt is LGPL obviously.
 

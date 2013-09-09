@@ -392,6 +392,7 @@ MainWindow::MainWindow(QWidget *parent) :
     toolsTB ->setFloatable(false);
 
     fileTB->addAction(ui->actionSave);
+    fileTB->addAction(ui->actionSave_audio_as);
     fileTB->addAction(ui->actionUndo);
     fileTB->addAction(ui->actionRedo);
 
@@ -478,11 +479,11 @@ MainWindow::MainWindow(QWidget *parent) :
     connect(ui->actionSave_audio_as, SIGNAL(triggered()), SLOT(onSaveAudioAs()));
 
     vsLog::instance()->enableHistory(false);
-    vsLog::s(QString("Launching QTau %1 @ %2").arg(QTAU_VERSION).arg(__DATE__));
+    onLog(QString("\t%1 %2 @ %3").arg(tr("Launching QTau")).arg(QTAU_VERSION).arg(__DATE__), (int)vsLog::success);
 
-    vsLog::i("//---------------------------------------------");
+    onLog("\t---------------------------------------------", (int)vsLog::info);
     vsLog::r(); // print stored messages from program startup
-    vsLog::i("//---------------------------------------------");
+    onLog("\t---------------------------------------------", (int)vsLog::info);
     vsLog::n();
 }
 

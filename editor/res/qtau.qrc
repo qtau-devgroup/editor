@@ -27,6 +27,7 @@
         <file>b_power.png</file>
         <file>speaker.png</file>
         <file>speaker-mute.png</file>
+        <file>b_save_music.png</file>
     </qresource>
     <qresource prefix="/tr">
         <file>documentation_en.txt</file>

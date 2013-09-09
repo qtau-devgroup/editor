@@ -105,7 +105,6 @@ namespace qtauSessionPlayback {
     } EState;
 }
 
-
 // conversion table of pianoroll keyboard key code (C1-B7) to fundamental frequency
 //float *semitoneToFrequency[] = { 0, // skip index 0 since note numbers start from 1
 //    32.7,   34.6,   36.7,   38.9,   41.2,   43.7,   46.2,   49.0,   51.9,   55.0,   58.3,   61.7,    // 1st octave
@@ -116,5 +115,9 @@ namespace qtauSessionPlayback {
 //    1046.5, 1108.7, 1174.7, 1244.5, 1318.5, 1396.9, 1480.0, 1568.0, 1661.2, 1760.0, 1864.7, 1975.5,  // 6th
 //    2093.0, 2217.5, 2349.3, 2489.0, 2637.0, 2793.8, 2960.0, 3136.0, 3322.4, 3520.0, 3729.3, 3951.1}; // 7th
 
+typedef union {
+    char    c[4];
+    quint32 i;
+} uichar;
 
 #endif // UTILS_H

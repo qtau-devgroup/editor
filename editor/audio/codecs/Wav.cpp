@@ -1,6 +1,7 @@
 /* Wav.cpp from QTau http://github.com/qtau-devgroup/editor by digited, BSD license */
 
 #include "audio/codecs/Wav.h"
+#include "audio/Resampler.h"
 #include "Utils.h"
 #include <qendian.h>
 
@@ -9,11 +10,11 @@
 // all char[] must be big-endian, while all integers should be unsigned little-endian
 
 typedef struct SWavRiff {
-    char    chunkID[4];     // "RIFF" 0x52494646 BE
+    uichar  chunkID;     // "RIFF" 0x52494646 BE
     quint32 chunkSize;
-    char    chunkFormat[4]; // "WAVE" 0x57415645 BE
+    uichar  chunkFormat; // "WAVE" 0x57415645 BE
 
-    void clear() { memset(chunkID, 0, sizeof(SWavRiff)); }
+    void clear() { memset(chunkID.c, 0, sizeof(SWavRiff)); }
 
     SWavRiff(const qint64 bufferSize = 0)
     {
@@ -21,68 +22,59 @@ typedef struct SWavRiff {
 
         if (bufferSize > 0)
         {
-            memcpy(chunkID,     "RIFF", 4);
-            memcpy(chunkFormat, "WAVE", 4);
+            memcpy(chunkID.c,     "RIFF", 4);
+            memcpy(chunkFormat.c, "WAVE", 4);
             chunkSize = 36 + bufferSize;
         }
     }
 
-    SWavRiff(QIODevice &d)
+    SWavRiff(QDataStream &reader)
     {
-        if (d.isReadable())
-        {
-            qint64 readBytes = d.read(chunkID, 12);
+        reader.setByteOrder(QDataStream::LittleEndian);
+        reader >> chunkID.i;
+        reader >> chunkSize;
+        reader >> chunkFormat.i;
 
-            if (readBytes == 12)
-                chunkSize = qFromLittleEndian<quint32>((uchar*)&chunkSize);
-            else
-                memset(chunkID, 0, 4);
-        }
-        else vsLog::e("Can't read WAV RIFF header from a closed device.");
+        if (reader.status() != QDataStream::Ok)
+            chunkID.i = 0;
     }
 
-    void saveToDevice(QIODevice &d)
+    void write(QDataStream &writer)
     {
-        if (d.isWritable())
+        if (isCorrect())
         {
-            if (isCorrect())
-            {
-                char chunkSizeBufLE[4];
-                qToLittleEndian<quint32>(chunkSize, (uchar*)chunkSizeBufLE);
-
-                d.write(chunkID,        4);
-                d.write(chunkSizeBufLE, 4);
-                d.write(chunkFormat,    4);
-            }
-            else vsLog::e("Wav RIFF header is incorrect, writing to device is cancelled.");
+            writer.setByteOrder(QDataStream::LittleEndian);
+            writer << chunkID.i;
+            writer << chunkSize;
+            writer << chunkFormat.i;
         }
-        else vsLog::e("Can't write Wav RIFF header to a closed device.");
+        else vsLog::e("Wav RIFF header is incorrect, writing to device is cancelled.");
     }
 
     bool isCorrect()
     {
-        return !memcmp(chunkID, "RIFF", 4) && !memcmp(chunkFormat, "WAVE", 4) && chunkSize > 0;
+        return !memcmp(chunkID.c, "RIFF", 4) && !memcmp(chunkFormat.c, "WAVE", 4) && chunkSize > 0;
     }
 } wavRIFF;
 
 
 typedef struct SWavFmt {
-    char    fmtChunkID[4];  // "fmt "  0x666d7420 BE
+    uichar  fmtChunkID;  // "fmt "  0x666d7420 BE
     quint32 fmtSize;
-    quint16 audioFormat;
-    quint16 numChannels;
-    quint32 sampleRate;
-    quint32 byteRate;
-    quint16 blockAlign;
-    quint16 bitsPerSample;
+    quint16 audioFormat;    // 2
+    quint16 numChannels;    // 2
+    quint32 sampleRate;     // 4
+    quint32 byteRate;       // 4
+    quint16 blockAlign;     // 2
+    quint16 bitsPerSample;  // 2
 
-    void clear() { memset(fmtChunkID, 0, sizeof(SWavFmt)); }
+    void clear() { memset(fmtChunkID.c, 0, sizeof(SWavFmt)); }
 
     SWavFmt() { clear(); }
 
     SWavFmt(const QAudioFormat &fmt)
     {
-        memcpy(fmtChunkID, "fmt ", 4);
+        memcpy(fmtChunkID.c, "fmt ", 4);
 
         fmtSize       = 16;
         audioFormat   = 1;
@@ -93,84 +85,57 @@ typedef struct SWavFmt {
         bitsPerSample = fmt.sampleSize();
     }
 
-    SWavFmt(QIODevice &d)
+    SWavFmt(QDataStream &reader)
     {
-        if (d.isReadable())
+        reader.setByteOrder(QDataStream::LittleEndian);
+        reader >> fmtChunkID.i;
+        reader >> fmtSize;
+
+        if (isCorrect())
         {
-            bool readOK = false;
+            reader >> audioFormat;
+            reader >> numChannels;
+            reader >> sampleRate;
+            reader >> byteRate;
+            reader >> blockAlign;
+            reader >> bitsPerSample;
 
-            // all wav chunks have same structure of 8 first bytes: char[4] + uint32 size
-            // in case this is a wrong chunk being read, read just 8 first bytes and check them - used in findFormatChunk()
-            qint64 readBytes = d.read(fmtChunkID, 8);
-            fmtSize = qFromLittleEndian<quint32>((uchar*)&fmtSize);
-
-            if (readBytes == 8 && !memcmp(fmtChunkID, "fmt ", 4) && fmtSize > 0)
-            {
-                qint64 toRead = sizeof(SWavFmt) - 8;
-                readBytes = d.read((char*)&audioFormat, toRead);
-
-                if (readBytes == toRead)
-                {
-                    fmtSize       = qFromLittleEndian<quint32>((uchar*)&fmtSize);
-                    audioFormat   = qFromLittleEndian<quint16>((uchar*)&audioFormat);
-                    numChannels   = qFromLittleEndian<quint16>((uchar*)&numChannels);
-                    sampleRate    = qFromLittleEndian<quint32>((uchar*)&sampleRate);
-                    byteRate      = qFromLittleEndian<quint32>((uchar*)&byteRate);
-                    blockAlign    = qFromLittleEndian<quint16>((uchar*)&blockAlign);
-                    bitsPerSample = qFromLittleEndian<quint16>((uchar*)&bitsPerSample);
-
-                    if (fmtSize > 16)
-                    {
-                        QByteArray ba = d.read(fmtSize - 16);
-                        readOK = ba.size() == (int)fmtSize - 16;
-                    }
-                    else
-                        readOK = true;
-                }
-            }
-
-            if (!readOK)
-                memset(fmtChunkID, 0, 4);
+            if (fmtSize > 16)
+                reader.skipRawData(fmtSize - 16);
         }
-        else vsLog::e("Can't read Wav Fmt chunk from a closed device.");
+
+        if (!(isCorrect() && reader.status() == QDataStream::Ok))
+            fmtChunkID.i = 0;
     }
 
-    void saveToDevice(QIODevice &d)
+    void write(QDataStream &writer)
     {
-        if (d.isWritable())
+        if (isCorrect())
         {
-            if (isCorrect())
-            {
-                char ints[20];
-                qToLittleEndian<quint32>(fmtSize,       (uchar*)&ints[0]);
-                qToLittleEndian<quint16>(audioFormat,   (uchar*)&ints[4]);
-                qToLittleEndian<quint16>(numChannels,   (uchar*)&ints[6]);
-                qToLittleEndian<quint32>(sampleRate,    (uchar*)&ints[8]);
-                qToLittleEndian<quint32>(byteRate,      (uchar*)&ints[12]);
-                qToLittleEndian<quint16>(blockAlign,    (uchar*)&ints[16]);
-                qToLittleEndian<quint16>(bitsPerSample, (uchar*)&ints[18]);
-
-                d.write(fmtChunkID, 4);
-                d.write(ints, 20);
-            }
-            else vsLog::e("Wav Fmt chunk is incorrect, writing to device cancelled.");
+            writer.setByteOrder(QDataStream::LittleEndian);
+            writer << fmtChunkID.i;
+            writer << fmtSize;
+            writer << audioFormat;
+            writer << numChannels;
+            writer << sampleRate;
+            writer << byteRate;
+            writer << blockAlign;
+            writer << bitsPerSample;
         }
-        else vsLog::e("Can't write Wav Fmt chunk to a closed device.");
+        else vsLog::e("Wav Fmt chunk is incorrect, writing to device cancelled.");
     }
 
     // if those are read correctly, rest should be ok
-    bool isCorrect()
-    {
-        return !memcmp(fmtChunkID, "fmt ", 4) && fmtSize >= 16 && audioFormat == 1; // 1 is raw PCM
-    }
+    bool isCorrect() { return !memcmp(fmtChunkID.c, "fmt ", 4) && fmtSize >= 16; }
+
 } wavFmt;
 
 
 typedef struct SWavData {
-    char    dataID[4];      // "data" 0x64617461 BE
+    uichar  dataID;    // "data" 0x64617461 BE
     quint32 dataSize;
 
-    void clear() { memset(dataID, 0, 8); }
+    void clear() { memset(dataID.c, 0, 8); }
 
     SWavData(const qint64 bufferSize = 0)
     {
@@ -178,43 +143,30 @@ typedef struct SWavData {
 
         if (bufferSize > 0)
         {
-            memcpy(dataID, "data", 4);
+            memcpy(dataID.c, "data", 4);
             dataSize = bufferSize;
         }
     }
 
-    SWavData(QIODevice &d)
+    SWavData(QDataStream &reader)
     {
-        if (d.isReadable())
-        {
-            qint64 readBytes = d.read(dataID, 8);
-
-            if (readBytes == 8)
-                dataSize = qFromLittleEndian<quint32>((uchar*)&dataSize);
-            else
-                memset(dataID, 0, 4);
-        }
-        else vsLog::e("Can't read WAV data chunk header from a closed device.");
+        reader.setByteOrder(QDataStream::LittleEndian);
+        reader >> dataID.i;
+        reader >> dataSize;
     }
 
-    void saveToDevice(QIODevice &d)
+    void write(QDataStream &writer)
     {
-        if (d.isWritable())
+        if (isCorrect())
         {
-            if (isCorrect())
-            {
-                char dataSizeBufLE[4];
-                qToLittleEndian<quint32>(dataSize, (uchar*)dataSizeBufLE);
-
-                d.write(dataID,        4);
-                d.write(dataSizeBufLE, 4);
-            }
-            else vsLog::e("Wav data chunk header is incorrect, writing to device is cancelled.");
+            writer.setByteOrder(QDataStream::LittleEndian);
+            writer << dataID.i;
+            writer << dataSize;
         }
-        else vsLog::e("Can't write Wav data chunk header to a closed device.");
+        else vsLog::e("Wav data chunk header is incorrect, writing to device is cancelled.");
     }
 
-    bool isCorrect() { return !memcmp(dataID, "data", 4) && dataSize > 0; }
+    bool isCorrect() { return !memcmp(dataID.c, "data", 4) && dataSize > 0; }
 
 } wavData;
 
@@ -230,15 +182,15 @@ bool qtauWavCodec::cacheAll()
         if (!dev->isSequential())
             dev->reset();
 
-        wavRIFF rh(*dev);
+        QDataStream reader(dev);
+        wavRIFF rh(reader);
 
         if (rh.isCorrect())
-            result = findFormatChunk() && findDataChunk();
+            result = findFormatChunk(reader) && findDataChunk(reader);
         else
             vsLog::e("Wav codec couldn't read RIFF header");
     }
-    else
-        vsLog::e("Audio Wav: empty data");
+    else vsLog::e("Audio Wav: empty data");
 
     if (result)
     {
@@ -273,11 +225,22 @@ bool qtauWavCodec::saveToDevice()
         if (!dev->isSequential())
             dev->reset();
 
-        dev->write((char*)&wavR, sizeof(wavR));
-        dev->write((char*)&wavF, sizeof(wavF));
-        dev->write((char*)&wavD, sizeof(wavD));
+        QDataStream writer(dev);
 
-        dev->write(buffer()); // don't close device because who knows what is it - could end badly if it was a socket
+        wavR.write(writer);
+        wavF.write(writer);
+        wavD.write(writer);
+
+        QAudioFormat wavSaveFormat; // always saving wav as S16 LE whatever buffer may hold
+        wavSaveFormat.setByteOrder(QAudioFormat::LittleEndian);
+        wavSaveFormat.setChannelCount(fmt.channelCount());
+        wavSaveFormat.setSampleRate(fmt.sampleRate());
+        wavSaveFormat.setSampleSize(16);
+        wavSaveFormat.setSampleType(QAudioFormat::SignedInt);
+
+        qtauResampler rsmp(buffer(), fmt, wavSaveFormat);
+        dev->write(rsmp.encode()); // don't close device because who knows what is it - could end badly if it was a socket
+
         result = true;
     }
     else vsLog::e("Wav codec could not open iodevice for writing, saving cancelled.");
@@ -294,17 +257,14 @@ qtauWavCodec::qtauWavCodec(QIODevice &d, QObject *parent) :
 }
 
 
-bool qtauWavCodec::findFormatChunk()
+bool qtauWavCodec::findFormatChunk(QDataStream &reader)
 {
     bool result = false;
-
-    if (!dev->isSequential())
-        dev->seek(12);
 
     // search for a format chunk
     while (true)
     {
-        wavFmt wf(*dev);
+        wavFmt wf(reader);
 
         if (wf.isCorrect())
         {
@@ -321,20 +281,7 @@ bool qtauWavCodec::findFormatChunk()
         }
         else // that's not the chunk we're looking for, need to skip it
         {
-            bool skippedChunk = false;
-
-            if (wf.fmtSize > 0)
-            {
-                if (dev->isSequential())
-                {
-                    QByteArray ba = dev->read(wf.fmtSize);
-                    skippedChunk = ba.size() == (int)wf.fmtSize;
-                }
-                else
-                    skippedChunk = dev->seek(dev->pos() + wf.fmtSize);
-            }
-
-            if (!skippedChunk)
+            if (wf.fmtSize == 0 || wf.fmtSize != (quint32)reader.skipRawData(wf.fmtSize))
             {
                 vsLog::e("Wav codec could not skip a wrong chunk in findFormatChunk(). Wav reading failed then.");
                 break;
@@ -346,17 +293,14 @@ bool qtauWavCodec::findFormatChunk()
 }
 
 
-bool qtauWavCodec::findDataChunk()
+bool qtauWavCodec::findDataChunk(QDataStream &reader)
 {
     bool result = false;
-
-    if (!dev->isSequential())
-        dev->seek(12);
 
     // search for a data chunk
     while (true)
     {
-        wavData wd(*dev);
+        wavData wd(reader);
 
         if (wd.isCorrect())
         {
@@ -368,20 +312,7 @@ bool qtauWavCodec::findDataChunk()
         }
         else // that's not the chunk we're looking for, need to skip it
         {
-            bool skippedChunk = false;
-
-            if (wd.dataSize > 0)
-            {
-                if (dev->isSequential())
-                {
-                    QByteArray ba = dev->read(wd.dataSize);
-                    skippedChunk = ba.size() == (int)wd.dataSize;
-                }
-                else
-                    skippedChunk = dev->seek(dev->pos() + wd.dataSize);
-            }
-
-            if (!skippedChunk)
+            if (wd.dataSize == 0 || wd.dataSize != (quint32)reader.skipRawData(wd.dataSize))
             {
                 vsLog::e("Wav codec could not skip a wrong chunk in findDataChunk(). Wav reading failed then.");
                 break;

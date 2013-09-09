@@ -25,7 +25,7 @@ qtauResampler::qtauResampler(const QByteArray &srcData, const QAudioFormat &srcF
         case QAudioFormat::UnSignedInt: // U8
             if (differentSamples)
             {
-                if (dstFmt.sampleType()      == QAudioFormat::SignedInt)   sampleChange = U8toS16;
+                if      (dstFmt.sampleType() == QAudioFormat::SignedInt)   sampleChange = U8toS16;
                 else if (dstFmt.sampleType() == QAudioFormat::Float)       sampleChange = U8toF32;
             }
 
@@ -34,7 +34,7 @@ qtauResampler::qtauResampler(const QByteArray &srcData, const QAudioFormat &srcF
         case QAudioFormat::SignedInt:   // S16
             if (differentSamples)
             {
-                if (dstFmt.sampleType()      == QAudioFormat::UnSignedInt) sampleChange = S16toU8;
+                if      (dstFmt.sampleType() == QAudioFormat::UnSignedInt) sampleChange = S16toU8;
                 else if (dstFmt.sampleType() == QAudioFormat::Float)       sampleChange = S16toF32;
             }
 
@@ -43,7 +43,7 @@ qtauResampler::qtauResampler(const QByteArray &srcData, const QAudioFormat &srcF
         case QAudioFormat::Float:       // F32
             if (differentSamples)
             {
-                if (dstFmt.sampleType()      == QAudioFormat::UnSignedInt) sampleChange = F32toU8;
+                if      (dstFmt.sampleType() == QAudioFormat::UnSignedInt) sampleChange = F32toU8;
                 else if (dstFmt.sampleType() == QAudioFormat::SignedInt)   sampleChange = F32toS16;
             }
 

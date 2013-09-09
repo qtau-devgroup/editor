@@ -5,6 +5,9 @@
 
 #include "audio/Codec.h"
 
+class QDataStream;
+
+
 class qtauAIFFCodec : public qtauAudioCodec
 {
     Q_OBJECT
@@ -17,8 +20,8 @@ public:
 protected:
     qtauAIFFCodec(QIODevice &d, QObject *parent = 0);
 
-    bool findCommonChunk();
-    bool findSoundChunk();
+    bool findCommonChunk(QDataStream &reader);
+    bool findSoundChunk(QDataStream &reader);
 
     quint64 _data_chunk_location;  // bytes
     int     _data_chunk_length;    // in frames
