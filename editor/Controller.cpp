@@ -23,8 +23,8 @@ qtauController::qtauController(QObject *parent) :
     qtauCodecRegistry *cr = qtauCodecRegistry::instance();
     cr->addCodec(new qtauWavCodecFactory ());
     cr->addCodec(new qtauAIFFCodecFactory());
-    cr->addCodec(new qtauFlacCodecFactory());
-    cr->addCodec(new qtauOggCodecFactory ());
+//    cr->addCodec(new qtauFlacCodecFactory());
+//    cr->addCodec(new qtauOggCodecFactory ());
 
     player = new qtmmPlayer(this);
 
@@ -161,37 +161,50 @@ void qtauController::onSaveAudio(QString fileName, bool rewrite)
 {
     if (activeSession && activeSession->getVocal().vocalWave->size() > 0)
     {
+        QFileInfo fi(fileName);
+        QString ext = QFileInfo(fileName).suffix();
+
+        if (fi.exists() && !rewrite)
+        {
+            vsLog::e(tr("File %1 exists, rewriting cancelled.").arg(fileName));
+            return;
+        }
+
+        if (!isAudioExtSupported(ext))
+        {
+            vsLog::e(tr("No codec for ") + ext);
+            return;
+        }
+
         QFile af(fileName);
 
-        if (af.open(QFile::WriteOnly))
+        if (!af.open(QFile::WriteOnly))
         {
-            if (af.size() == 0 || rewrite)
-            {
-                af.reset();
-                qtauAudioCodec *codec = codecForExt(QFileInfo(fileName).suffix(), af, this);
-
-                if (codec)
-                {
-                    // TODO: mixdown of vocal + bgm?
-
-                    // TODO: copy audio data when file io will be threaded
-                    qtauAudioSource *v = activeSession->getVocal().vocalWave;
-                    codec->setAudioFormat(v->getAudioFormat());
-                    codec->buffer() = v->buffer();
-                    codec->saveToDevice();
-                    delete codec;
-
-                    vsLog::s("Audio saved: " + fileName);
-                }
-                else vsLog::e("No codec for " + fileName);
-
-                af.close();
-            }
-            else vsLog::e("File " + fileName + " is not empty, rewriting cancelled");
+            vsLog::e(tr("Could not open file %1 to save audio").arg(fileName));
+            return;
         }
-        else vsLog::e("Could not open file " + fileName + " to save audio");
+
+        af.reset();
+        qtauAudioCodec *codec = codecForExt(QFileInfo(fileName).suffix(), af, this);
+
+        if (codec)
+        {
+            // TODO: mixdown of vocal + bgm?
+
+            // TODO: copy audio data when file io will be threaded
+            qtauAudioSource *v = activeSession->getVocal().vocalWave;
+            codec->setAudioFormat(v->getAudioFormat());
+            codec->buffer() = v->buffer();
+            codec->saveToDevice();
+            delete codec;
+
+            vsLog::s(tr("Audio saved: ") + fileName);
+        }
+        else vsLog::e(tr("Could not make a codec for ").arg(fileName));
+
+        af.close();
     }
-    else vsLog::e("Trying to save audio from empty session!");
+    else vsLog::e(tr("Trying to save audio from empty session!"));
 }
 
 

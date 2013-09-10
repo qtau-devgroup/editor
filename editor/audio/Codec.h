@@ -53,6 +53,8 @@ public:
 
     bool addCodec(qtauAudioCodecFactory *factory, bool replace = false);
 
+    QList<QString> listCodecs(); // utility for load/save dialogs, returns strings in format "description (*.ext)"
+
 protected:
     qtauCodecRegistry() {}
     Q_DISABLE_COPY(qtauCodecRegistry)

@@ -150,6 +150,12 @@ protected:
     void dragEnterEvent(QDragEnterEvent *);
     void dragMoveEvent(QDragMoveEvent *);
     void dropEvent(QDropEvent *);
+    void closeEvent(QCloseEvent *event);
+
+    //---------------
+
+    QString lastScoreDir;
+    QString lastAudioDir;
 
 };
 

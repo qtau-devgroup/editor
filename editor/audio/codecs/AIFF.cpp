@@ -6,27 +6,26 @@
 
 #include <qendian.h>
 #include <qmath.h>
+#include <stdint.h>
 
 
 // 80 bit float to uint32
 inline quint32 readLD_be(quint16 &exp, quint64 &mnt)
 {
-    return ldexp(mnt, exp - 16383 - 63);
+    return ldexp(mnt, exp - 16383 - 63); // 80bit float isn't supported everywhere. Hacks from libav
 }
 
 inline void writeLD_be(const quint32 &val, quint16 &exp, quint64 &mnt)
 {
-    quint64 one = 1;
-
     union dui64 {
         double  d;
-        quint64 i;
+        quint64 i; // reinterpret for bit shifting
     };
 
-    dui64 dui;
-    dui.d = val;
-    exp = (dui.i >> 52) + (16383 - 1023);
-    mnt = one << 63 | val << 11;
+    dui64 uVal;
+    uVal.d = val; // convert to double
+    exp = (uVal.i >> 52) + (16383 - 1023);   // get and change double's exponent
+    mnt = UINT64_C(1) << 63 | uVal.i << 11;  // get double's mantissa
 }
 
 //------ AIFF RIFF headers, everything is in Big Endian (including PCM data) --------------------

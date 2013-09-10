@@ -47,13 +47,20 @@ const QString dynLblFGcss  = QString("QLabel { color : %1; background-color : %2
         .arg(DEFCOLOR_DYNBTN_ON).arg(DEFCOLOR_DYNBTN_ON_BG);
 
 
+QSettings settings("QTau_Devgroup", "QTau");
+const QString SK_SCORE_DIR          = "last_score_dir";
+const QString SK_AUDIO_DIR          = "last_audio_dir";
+const QString SK_WIN_SIZE           = "window_size";
+const QString SK_WIN_MAX            = "window_fullscreen";
+const QString SK_SHOW_LOGNUM        = "show_new_log_number";
+const QString SK_DYNPANEL_VISIBLE   = "dynamics_panel_visible";
+
+
 MainWindow::MainWindow(QWidget *parent) :
     QMainWindow(parent), ui(new Ui::MainWindow), doc(0), fgDynLbl(0), bgDynLbl(0),
     logNewMessages(0), logHasErrors(false), showNewLogNumber(true)
 {
     ui->setupUi(this);
-
-    QSettings settings("QTau_Devgroup", "QTau");
 
     setWindowIcon(QIcon(":/images/appicon_ouka_alice.png"));
     setWindowTitle("QTau");
@@ -371,7 +378,6 @@ MainWindow::MainWindow(QWidget *parent) :
     tabs->widget(5)->setContentsMargins(0,0,0,0);
 
     logTabTextColor = tabs->tabBar()->tabTextColor(5);
-    showNewLogNumber = settings.value("show_new_log_number", true).toBool();
 
     connect(tabs, SIGNAL(currentChanged(int)), SLOT(onTabSelected(int)));
 
@@ -440,7 +446,6 @@ MainWindow::MainWindow(QWidget *parent) :
     toolbars.append(toolsTB);
 
     //----------------------------------------------
-
     connect(piano,      SIGNAL(heightChanged(int)), SLOT(onPianoHeightChanged(int)));
     connect(noteEditor, SIGNAL(widthChanged(int)),  SLOT(onNoteEditorWidthChanged(int)));
 
@@ -478,6 +483,32 @@ MainWindow::MainWindow(QWidget *parent) :
 
     connect(ui->actionSave_audio_as, SIGNAL(triggered()), SLOT(onSaveAudioAs()));
 
+    //----------------------------------------------
+
+    lastScoreDir     = settings.value(SK_SCORE_DIR,   "").toString();
+    lastAudioDir     = settings.value(SK_AUDIO_DIR,   "").toString();
+    showNewLogNumber = settings.value(SK_SHOW_LOGNUM, true).toBool();
+
+    if (!settings.value(SK_DYNPANEL_VISIBLE).toBool())
+    {
+        QList<int> panelSizes = spl->sizes();
+        panelSizes[3] = 0;
+        spl->setSizes(panelSizes);
+    }
+
+    if (settings.value(SK_WIN_MAX).toBool())
+        showMaximized();
+    else
+    {
+        QRect winGeom = geometry();
+        QRect setGeom = settings.value(SK_WIN_SIZE, QRect(QPoint(0,0), minimumSize())).value<QRect>();
+
+        if (setGeom.width() >= winGeom.width() && setGeom.height() >= setGeom.height())
+            setGeometry(setGeom);
+    }
+
+    //----------------------------------------------
+
     vsLog::instance()->enableHistory(false);
     onLog(QString("\t%1 %2 @ %3").arg(tr("Launching QTau")).arg(QTAU_VERSION).arg(__DATE__), (int)vsLog::success);
 
@@ -487,11 +518,24 @@ MainWindow::MainWindow(QWidget *parent) :
     vsLog::n();
 }
 
-
-MainWindow::~MainWindow()
+void MainWindow::closeEvent(QCloseEvent *event)
 {
-    delete ui;
+    // store settings
+    settings.setValue(SK_SCORE_DIR,         lastScoreDir);
+    settings.setValue(SK_AUDIO_DIR,         lastAudioDir);
+    settings.setValue(SK_WIN_SIZE,          geometry());
+    settings.setValue(SK_WIN_MAX,           isMaximized());
+    settings.setValue(SK_SHOW_LOGNUM,       showNewLogNumber);
+    settings.setValue(SK_DYNPANEL_VISIBLE,  drawZonePanel->isVisible());
+
+    event->accept();
 }
+
+void MainWindow::onQuit() { close();   }
+MainWindow::~MainWindow() { delete ui; }
+
+//========================================================================================
+
 
 bool MainWindow::setController(qtauController &c, qtauSession &s)
 {
@@ -543,10 +587,13 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
 void MainWindow::onOpenUST()
 {
     QString fileName = QFileDialog::getOpenFileName(this,
-        tr("Open UST"), "", tr("UTAU Sequence Text Files (*.ust)"));
+        tr("Open UST"), lastScoreDir, tr("UTAU Sequence Text Files (*.ust)"));
 
     if (!fileName.isEmpty())
+    {
+        lastScoreDir = QFileInfo(fileName).absolutePath();
         emit loadUST(fileName);
+    }
 }
 
 void MainWindow::onSaveUST()
@@ -560,19 +607,38 @@ void MainWindow::onSaveUST()
 void MainWindow::onSaveUSTAs()
 {
     QString fileName = QFileDialog::getSaveFileName(this,
-        tr("Save UST"), "", tr("UTAU Sequence Text Files (*.ust)"));
+        tr("Save UST"), lastScoreDir, tr("UTAU Sequence Text Files (*.ust)"));
 
     if (!fileName.isEmpty())
+    {
+        lastScoreDir = QFileInfo(fileName).absolutePath();
         emit saveUST(fileName, true);
+    }
 }
 
 void MainWindow::onSaveAudioAs()
 {
-    QString fileName = QFileDialog::getSaveFileName(this,
-        tr("Save Wave"), "", tr("WAV PCM files (*.wav)"));
+    QList<QString> codecs = qtauCodecRegistry::instance()->listCodecs();
 
-    if (!fileName.isEmpty())
-        emit saveAudio(fileName, true);
+    if (!codecs.isEmpty())
+    {
+        QString codecStr;
+
+        foreach (const QString &c, codecs)
+            codecStr.append(";;" + c);
+
+        codecStr.remove(0,2);
+
+        QString fileName = QFileDialog::getSaveFileName(this,
+            tr("Save audio"), lastAudioDir, codecStr);
+
+        if (!fileName.isEmpty())
+        {
+            lastAudioDir = QFileInfo(fileName).absolutePath();
+            emit saveAudio(fileName, true);
+        }
+    }
+    else vsLog::e(tr("Can't save audio because no audio codecs. At all. This shouldn't happen!"));
 }
 
 void MainWindow::notesVScrolled(int delta)
@@ -821,10 +887,13 @@ void MainWindow::onLog(const QString &msg, int type)
 
     if (!viewingLog)
     {
-        logNewMessages++;
-
         QTabBar *tb = const_cast<QTabBar *>(tabs->tabBar()); // dirty hack I know, but no other way atm
-        tb->setTabText     (tb->count() - 1, tr("Log") + QString(" (%1)").arg(logNewMessages));
+
+        if (showNewLogNumber)
+        {
+            tb->setTabText(tb->count() - 1, tr("Log") + QString(" (%1)").arg(logNewMessages));
+            logNewMessages++;
+        }
 
         if ((vsLog::msgType)type == vsLog::error)
         {
@@ -898,11 +967,6 @@ void MainWindow::onEditorZoomed(int delta)
         if ((delta > 0 && zoom->value() >= 0) ||
             (delta < 0 && zoom->value() < CONST_ZOOMS))
             zoom->setValue(zoom->value() + ((delta > 0) ? 1 : -1));
-}
-
-void MainWindow::onQuit()
-{
-    close();
 }
 
 void MainWindow::onDocReloaded()

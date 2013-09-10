@@ -78,3 +78,14 @@ bool qtauCodecRegistry::addCodec(qtauAudioCodecFactory *factory, bool replace)
 
     return result;
 }
+
+QList<QString> qtauCodecRegistry::listCodecs()
+{
+    QList<QString> result;
+
+    if (!codecsByMime.isEmpty())
+        foreach (const QString &ext, codecsByExt.keys())
+            result.append(QString("%1 - %2 (*.%3)").arg(ext).arg(codecsByExt[ext]->desc()).arg(ext));
+
+    return result;
+}
