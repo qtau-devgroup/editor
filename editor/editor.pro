@@ -112,3 +112,5 @@ SOURCES += \
     ../tools/flac-1.3.0/src/libFLAC/ogg_encoder_aspect.c \
     ../tools/flac-1.3.0/src/libFLAC/ogg_helper.c \
     ../tools/flac-1.3.0/src/libFLAC/ogg_mapping.c
+
+windows:SOURCES += ../tools/flac-1.3.0/src/share/win_utf8_io/win_utf8_io.c
