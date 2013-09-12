@@ -27,7 +27,12 @@ public:
     bool run(); // app startup & setup, window creation
 
 signals:
-    //
+    void playEffect(const qtauAudioSource &e);
+    void playTrack (const qtauAudioSource &t);
+
+    void playStart();
+    void playPause();
+    void playStop();
 
 public slots:
     void onAppMessage(const QString& msg);

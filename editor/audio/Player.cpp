@@ -2,102 +2,117 @@
 
 #include "audio/Player.h"
 #include "audio/Source.h"
+#include "audio/Mixer.h"
 #include "Utils.h"
 
 #include <QAudioOutput>
 
-
-qtmmPlayer::qtmmPlayer(QObject *parent) :
-    QObject(parent), audioOutput(0), volume(50)
+qtmmPlayer::qtmmPlayer()
 {
     vsLog::d("QtMultimedia :: supported output devices and codecs:");
     QList<QAudioDeviceInfo> advs = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);
 
     foreach (QAudioDeviceInfo i, advs)
         vsLog::d(QString("%1 %2").arg(i.deviceName()).arg(i.supportedCodecs().join(' ')));
+
+    mixer = new qtauSoundMixer();
+
+    QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+    QAudioFormat fmt = mixer->getAudioFormat();
+
+    if (info.isFormatSupported(fmt))
+    {
+        QAudioDeviceInfo di(QAudioDeviceInfo::defaultOutputDevice());
+        audioOutput = new QAudioOutput(di, fmt, this);
+        audioOutput->setVolume((qreal)volume / 100.f);
+
+        connect(audioOutput, SIGNAL(stateChanged(QAudio::State)), SLOT(onQtmmStateChanged(QAudio::State)));;
+        connect(audioOutput, SIGNAL(notify()), SLOT(onTick()));
+    }
+    else vsLog::e("Default audio format not supported by QtMultimedia backend, cannot play audio.");
 }
 
 qtmmPlayer::~qtmmPlayer()
 {
-    //
+    delete audioOutput;
+    delete mixer;
 }
 
 
-bool qtmmPlayer::play(qtauAudioSource *a)
+void qtmmPlayer::playEffect(const qtauAudioSource &/*e*/, bool /*replace*/, bool /*smoothly*/)
 {
-    bool result = false;
+    //
+}
 
-    if (a != 0)
-    {
-        bool needToRemakeDevice = audioOutput && audioOutput->format() != a->getAudioFormat();
+void qtmmPlayer::playTrack (const qtauAudioSource &/*t*/, bool /*replace*/, bool /*smoothly*/)
+{
+    //
+}
 
-        if (audioOutput)
-        {
-            if (audioOutput->state() != QAudio::IdleState ||
-                audioOutput->state() != QAudio::StoppedState)
-                stop();
+void qtmmPlayer::play()
+{
+//    bool result = false;
 
-            if (needToRemakeDevice)
-            {
-                delete audioOutput;
-                audioOutput = 0;
-            }
-        }
+//    if (a != 0)
+//    {
+//        bool needToRemakeDevice = audioOutput && audioOutput->format() != a->getAudioFormat();
 
-        if (a->size() > 0)
-        {
-            if (!audioOutput)
-            {
-                QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
+//        if (audioOutput)
+//        {
+//            if (audioOutput->state() != QAudio::IdleState ||
+//                audioOutput->state() != QAudio::StoppedState)
+//                stop();
 
-                if (info.isFormatSupported(a->getAudioFormat()))
-                {
-                    QAudioDeviceInfo di(QAudioDeviceInfo::defaultOutputDevice());
-                    audioOutput = new QAudioOutput(di, a->getAudioFormat(), this);
-                    audioOutput->setVolume((qreal)volume / 100.f);
+//            if (needToRemakeDevice)
+//            {
+//                delete audioOutput;
+//                audioOutput = 0;
+//            }
+//        }
 
-                    connect(audioOutput, SIGNAL(stateChanged(QAudio::State)), SLOT(onQtmmStateChanged(QAudio::State)));;
-                    connect(audioOutput, SIGNAL(notify()), SLOT(onTick()));
-                }
-                else vsLog::e("audio format not supported by backend, cannot play audio.");
-            }
+//        if (a->size() > 0)
+//        {
+//            if (!audioOutput)
+//            {
 
-            if (audioOutput)
-            {
-                bool opened = a->isOpen();
+//            }
 
-                if (!opened)
-                    opened = a->open(QIODevice::ReadOnly);
+//            if (audioOutput)
+//            {
+//                bool opened = a->isOpen();
 
-                if (opened)
-                {
-                    audioOutput->start(a); // audioOutput::start requires a device, opened for reading
-                    result = true;
-                }
-                else vsLog::e("Could not open audio source device at all. How is this even possible?");
-            }
-        }
-        else vsLog::e("no audio data to play");
-    }
-    else
-        if (audioOutput)
-        {
-            if (audioOutput->state() == QAudio::SuspendedState) // continue playing
-            {
-                audioOutput->resume();
-                result = true;
-            }
-            else if (audioOutput->state() == QAudio::StoppedState)
-            {
-                audioOutput->start();
-                result = true;
-            }
-        }
+//                if (!opened)
+//                    opened = a->open(QIODevice::ReadOnly);
 
-    if (!result)
-        emit playbackEnded();
+//                if (opened)
+//                {
+//                    audioOutput->start(a); // audioOutput::start requires a device, opened for reading
+//                    result = true;
+//                }
+//                else vsLog::e("Could not open audio source device at all. How is this even possible?");
+//            }
+//        }
+//        else vsLog::e("no audio data to play");
+//    }
+//    else
+//        if (audioOutput)
+//        {
+//            if (audioOutput->state() == QAudio::SuspendedState) // continue playing
+//            {
+//                audioOutput->resume();
+//                result = true;
+//            }
+//            else if (audioOutput->state() == QAudio::StoppedState)
+//            {
+//                audioOutput->start();
+//                result = true;
+//            }
+//        }
 
-    return result;
+//    if (!result)
+//        emit playbackEnded();
+
+//    return result;
 }
 
 void qtmmPlayer::pause()
@@ -119,6 +134,26 @@ void qtmmPlayer::setVolume(int level)
 
     if (audioOutput)
         audioOutput->setVolume((qreal)level / 100.f);
+}
+
+void qtmmPlayer::onEffectEnded(qtauAudioSource* /*e*/)
+{
+    //
+}
+
+void qtmmPlayer::onTrackEnded(qtauAudioSource* /*t*/)
+{
+    //
+}
+
+void qtmmPlayer::onAllEffectsEnded()
+{
+    //
+}
+
+void qtmmPlayer::onAllTracksEnded()
+{
+    //
 }
 
 void qtmmPlayer::onQtmmStateChanged(QAudio::State st)

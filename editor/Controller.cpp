@@ -26,7 +26,7 @@ qtauController::qtauController(QObject *parent) :
 //    cr->addCodec(new qtauFlacCodecFactory());
 //    cr->addCodec(new qtauOggCodecFactory ());
 
-    player = new qtmmPlayer(this);
+    player = new qtmmPlayer();
 
     setupTranslations();
     setupPlugins();
@@ -230,10 +230,7 @@ void qtauController::pianoKeyPressed(int keyNum)
         s->setVocals(u);
 
         if (s->synthesize(*tmpAS))
-        {
-            player->stop();
-            player->play(tmpAS);
-        }
+            emit playEffect(*tmpAS);
     }
 }
 
@@ -347,7 +344,7 @@ void qtauController::onRequestStartPlayback()
             if (v.vocalWave->isOpen())
                 v.vocalWave->reset();
 
-            player->play(v.vocalWave);
+            emit playTrack(*v.vocalWave);
         }
     }
     else if (gotMusic)
@@ -365,7 +362,8 @@ void qtauController::onRequestStartPlayback()
 
             playState.state = Playing;
             activeSession->setPlaybackState(qtauSessionPlayback::Playing);
-            player->play(m.musicWave);
+
+            emit playTrack(*m.musicWave);
         }
         else vsLog::e("Controller is playing audio already, playback shouldn't be requested!");
     }
