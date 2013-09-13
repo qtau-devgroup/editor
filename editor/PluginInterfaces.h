@@ -10,7 +10,7 @@
 class qtauAudioSource;
 
 typedef struct SynthConfig {
-    vsLog *log;
+    vsLog *log = nullptr;
     // TODO: some other settings
 
     SynthConfig(vsLog &l) : log(&l) {}
@@ -41,6 +41,8 @@ public:
     virtual bool supportsStreaming()           = 0;
 };
 
-Q_DECLARE_INTERFACE(ISynth, "org.qtau.awesomesauce.ISynth")
+#define c_isynth_comname "org.qtau.awesomesauce.ISynth"
+
+Q_DECLARE_INTERFACE(ISynth, c_isynth_comname)
 
 #endif // PLUGININTERFACES_H

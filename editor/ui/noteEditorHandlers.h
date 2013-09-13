@@ -140,9 +140,9 @@ public:
     ~qtauEd_TextInput();
 
 protected:
-    void reset();
-    void cleanup();
-    void init();
+    void reset()    override;
+    void cleanup()  override;
+    void init()     override;
 
     bool managedOnEdited; // if onEdited() is called manually and need a different controller next
     bool editingNote;
@@ -151,7 +151,7 @@ protected:
 protected slots:
     void onEdited();
     void unfocus();
-    bool eventFilter(QObject *obj, QEvent *event);
+    bool eventFilter(QObject *obj, QEvent *event) override;
 
 };
 
@@ -167,13 +167,13 @@ public:
     ~qtauEd_SelectRect();
 
 protected:
-    void mouseMoveEvent   (QMouseEvent  *event);
-    void mouseReleaseEvent(QMouseEvent  *event);
+    void mouseMoveEvent   (QMouseEvent  *event) override;
+    void mouseReleaseEvent(QMouseEvent  *event) override;
 
-    void mouseDoubleClickEvent(QMouseEvent*) { changeController(new qtauEdController(this)); }
-    void mousePressEvent      (QMouseEvent*) { changeController(new qtauEdController(this)); }
+    void mouseDoubleClickEvent(QMouseEvent*) override { changeController(new qtauEdController(this)); }
+    void mousePressEvent      (QMouseEvent*) override { changeController(new qtauEdController(this)); }
 
-    void reset();
+    void reset() override;
 
 };
 
@@ -189,14 +189,14 @@ public:
     ~qtauEd_DragNotes();
 
 protected:
-    void mouseMoveEvent   (QMouseEvent  *event);
-    void mouseReleaseEvent(QMouseEvent  *event);
+    void mouseMoveEvent   (QMouseEvent  *event) override;
+    void mouseReleaseEvent(QMouseEvent  *event) override;
 
-    void mouseDoubleClickEvent(QMouseEvent*) { changeController(new qtauEdController(this)); }
-    void mousePressEvent      (QMouseEvent*) { changeController(new qtauEdController(this)); }
+    void mouseDoubleClickEvent(QMouseEvent*) override { changeController(new qtauEdController(this)); }
+    void mousePressEvent      (QMouseEvent*) override { changeController(new qtauEdController(this)); }
 
-    void init();
-    void reset();
+    void init()  override;
+    void reset() override;
     qne::editorNote *mainMovedNote;
 
     QVector<QRect> selRects;
@@ -216,14 +216,14 @@ public:
     ~qtauEd_ResizeNote();
 
 protected:
-    void mouseMoveEvent   (QMouseEvent  *event);
-    void mouseReleaseEvent(QMouseEvent  *event);
+    void mouseMoveEvent   (QMouseEvent  *event) override;
+    void mouseReleaseEvent(QMouseEvent  *event) override;
 
-    void mouseDoubleClickEvent(QMouseEvent*) { changeController(new qtauEdController(this)); }
-    void mousePressEvent      (QMouseEvent*) { changeController(new qtauEdController(this)); }
+    void mouseDoubleClickEvent(QMouseEvent*) override { changeController(new qtauEdController(this)); }
+    void mousePressEvent      (QMouseEvent*) override { changeController(new qtauEdController(this)); }
 
-    void init();
-    void reset();
+    void init()  override;
+    void reset() override;
 
     qne::editorNote *editedNote;
     bool  toLeft; // if should resize to left direction (move beginning) or to right (move end)
@@ -243,14 +243,14 @@ public:
     ~qtauEd_AddNote();
 
 protected:
-    void mouseMoveEvent   (QMouseEvent  *event);
-    void mouseReleaseEvent(QMouseEvent  *event);
+    void mouseMoveEvent   (QMouseEvent  *event) override;
+    void mouseReleaseEvent(QMouseEvent  *event) override;
 
-    void mouseDoubleClickEvent(QMouseEvent*) { changeController(new qtauEdController(this)); }
-    void mousePressEvent      (QMouseEvent*) { changeController(new qtauEdController(this)); }
+    void mouseDoubleClickEvent(QMouseEvent*) override { changeController(new qtauEdController(this)); }
+    void mousePressEvent      (QMouseEvent*) override { changeController(new qtauEdController(this)); }
 
-    void init();
-    void reset();
+    void init()  override;
+    void reset() override;
 
     qne::editorNote *editedNote;
     int minOffset;

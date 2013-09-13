@@ -13,8 +13,8 @@ class qtauWavCodec : public qtauAudioCodec
     friend class qtauWavCodecFactory;
 
 public:
-    bool cacheAll();
-    bool saveToDevice();
+    bool cacheAll()     override;
+    bool saveToDevice() override;
 
 protected:
     qtauWavCodec(QIODevice &d, QObject *parent = 0);
@@ -37,7 +37,7 @@ public:
         _desc = "Microsoft lossless audio";
     }
 
-    qtauAudioCodec* make(QIODevice &d, QObject *parent = 0)
+    qtauAudioCodec* make(QIODevice &d, QObject *parent = 0) override
     {
         return new qtauWavCodec(d, parent);
     }

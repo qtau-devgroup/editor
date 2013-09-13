@@ -11,8 +11,8 @@ class qtauFlacCodec : public qtauAudioCodec
     friend class qtauFlacCodecFactory;
 
 public:
-    bool cacheAll();
-    bool saveToDevice();
+    bool cacheAll()     override;
+    bool saveToDevice() override;
 
 protected:
     qtauFlacCodec(QIODevice &d, QObject *parent = 0);
@@ -29,7 +29,7 @@ public:
         _desc = "Free Lossless Audio Codec";
     }
 
-    qtauAudioCodec* make(QIODevice &d, QObject *parent = 0)
+    qtauAudioCodec* make(QIODevice &d, QObject *parent = 0) override
     {
         return new qtauFlacCodec(d, parent);
     }

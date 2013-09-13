@@ -20,15 +20,15 @@ public:
     void addEffect(qtauAudioSource *e, bool replace = false, bool smoothly = true);
 
     //--- QIODevice interface functions ---------
-    bool   isSequential()   const  { return true;  } // always sequential
-    qint64 pos()            const  { return 0;     } // don't have one.
-    bool   seek(qint64)            { return false; } // nope.
-    bool   reset()                 { return false; } // what? NO.
-    bool   atEnd()          const  { return tracks.isEmpty() && effects.isEmpty(); }
-    qint64 size()           const  { return bytesAvailable(); }
-    qint64 bytesToWrite()   const  { return 0;     } // unwritable, use addTrack/addEffect
+    bool   isSequential()   const override { return true;  } // always sequential
+    qint64 pos()            const override { return 0;     } // don't have one.
+    bool   seek(qint64)           override { return false; } // nope.
+    bool   reset()                override { return false; } // what? NO.
+    bool   atEnd()          const override { return tracks.isEmpty() && effects.isEmpty(); }
+    qint64 size()           const override { return bytesAvailable(); }
+    qint64 bytesToWrite()   const override { return 0;     } // unwritable, use addTrack/addEffect
 
-    qint64 bytesAvailable() const;
+    qint64 bytesAvailable() const override;
     //-------------------------------------------
 
     void clear()        { clearTracks(); clearEffects(); }
@@ -49,8 +49,8 @@ protected:
     bool replacingEffectsSmoothly = false;
     bool replacingTracksSmoothly  = false;
 
-    qint64 readData(char *data, qint64 maxlen);
-    qint64 writeData(const char *, qint64)      { return 0; } // unwritable, use addTrack/addEffect
+    qint64 readData(char *data, qint64 maxlen) override;
+    qint64 writeData(const char *, qint64)     override { return 0; } // unwritable, use addTrack/addEffect
 
 };
 

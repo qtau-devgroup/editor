@@ -11,8 +11,8 @@ class qtauOggCodec : public qtauAudioCodec
     friend class qtauOggCodecFactory;
 
 public:
-    bool cacheAll();
-    bool saveToDevice();
+    bool cacheAll()     override;
+    bool saveToDevice() override;
 
 protected:
     qtauOggCodec(QIODevice &d, QObject *parent = 0);
@@ -29,7 +29,7 @@ public:
         _desc = "Ogg Vorbis lossy audio";
     }
 
-    qtauAudioCodec* make(QIODevice &d, QObject *parent = 0)
+    qtauAudioCodec* make(QIODevice &d, QObject *parent = 0) override
     {
         return new qtauOggCodec(d, parent);
     }

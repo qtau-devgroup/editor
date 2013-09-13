@@ -14,8 +14,8 @@ class qtauAIFFCodec : public qtauAudioCodec
     friend class qtauAIFFCodecFactory;
 
 public:
-    bool cacheAll();
-    bool saveToDevice();
+    bool cacheAll()     override;
+    bool saveToDevice() override;
 
 protected:
     qtauAIFFCodec(QIODevice &d, QObject *parent = 0);
@@ -38,7 +38,7 @@ public:
         _desc = "Apple lossless audio";
     }
 
-    qtauAudioCodec* make(QIODevice &d, QObject *parent = 0)
+    qtauAudioCodec* make(QIODevice &d, QObject *parent = 0) override
     {
         return new qtauAIFFCodec(d, parent);
     }
