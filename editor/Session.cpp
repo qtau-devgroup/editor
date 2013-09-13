@@ -13,8 +13,7 @@
 
 
 qtauSession::qtauSession(QObject *parent) :
-    qtauEventManager(parent), docName(tr("Untitled")), isModified(false), hadSavePoint(false),
-    playSt(qtauSessionPlayback::NothingToPlay)
+    qtauEventManager(parent)
 {
     vocal.vocalWave = new qtauAudioSource(this);
     music.musicWave = new qtauAudioSource(this);
@@ -86,7 +85,7 @@ bool qtauSession::loadUST(QString fileName)
                 emit onEvent(loadNotesChangeset);
 
                 if (!data.notes.isEmpty())
-                    setPlaybackState(qtauSessionPlayback::NeedsSynthesis);
+                    setPlaybackState(EAudioPlayback::needsSynth);
 
                 delete loadNotesChangeset;
                 result = true;
@@ -335,9 +334,9 @@ void qtauSession::stackChanged()
     emit modifiedStatus(isModified);
 
     if (noteMap.isEmpty() && !music.musicWave)
-        setPlaybackState(qtauSessionPlayback::NothingToPlay);
+        setPlaybackState(EAudioPlayback::noAudio);
     else
-        setPlaybackState(qtauSessionPlayback::NeedsSynthesis);
+        setPlaybackState(EAudioPlayback::needsSynth);
 }
 
 void qtauSession::setSynthesizedVocal(qtauAudioSource &s)
@@ -403,23 +402,23 @@ void qtauSession::startPlayback()
 {
     switch (playSt)
     {
-    case qtauSessionPlayback::Playing:
-    case qtauSessionPlayback::Repeating:
+    case EAudioPlayback::playing:
+    case EAudioPlayback::repeating:
         emit requestPausePlayback();
         break;
 
-    case qtauSessionPlayback::Paused:
-    case qtauSessionPlayback::Stopped:
+    case EAudioPlayback::paused:
+    case EAudioPlayback::stopped:
         emit requestStartPlayback();
         break;
 
-    case qtauSessionPlayback::NeedsSynthesis:
+    case EAudioPlayback::needsSynth:
         emit requestSynthesis();
         break;
 
-    case qtauSessionPlayback::NothingToPlay:
+    case EAudioPlayback::noAudio:
     default:
-        vsLog::e(QString("Session was asked to start playback when nothing to play! %1").arg(playSt));
+        vsLog::e(QString("Session was asked to start playback when nothing to play! %1").arg((char)playSt));
     }
 }
 
@@ -438,7 +437,7 @@ void qtauSession::repeatPlayback()
     emit requestRepeatPlayback();
 }
 
-void qtauSession::setPlaybackState(qtauSessionPlayback::EState state)
+void qtauSession::setPlaybackState(EAudioPlayback state)
 {
     if (state != playSt) // may be called with same state on reset (playing -> playing)
     {

@@ -32,45 +32,55 @@
 
 #include "audio/Codec.h"
 
-const int CONST_NUM_BARS            = 128; // 128 bars "is enough for everyone"
+const int cdef_bars             = 128; // 128 bars "is enough for everyone" // TODO: make dynamic
 
-const int CONST_MIN_PIANO_WIDTH     = 110;
-const int CONST_MIN_PIANO_HEIGHT    = 40;
-const int CONST_METER_HEIGHT        = 20;
-const int CONST_WAVEFORM_MIN_HEIGHT = 50;
-const int CONST_DRAWZONE_MIN_HEIGHT = 100;
-const int CONST_DYN_BUTTONS         = 10;
+const int c_piano_min_width     = 110;
+const int c_piano_min_height    = 40;
+const int c_meter_min_height    = 20;
+const int c_waveform_min_height = 50;
+const int c_drawzone_min_height = 100;
+const int c_dynbuttons_num      = 10;
 
-const QString dynLblOFFcss = QString("QLabel { color : %1; }").arg(DEFCOLOR_DYNBTN_OFF);
-const QString dynLblBGcss  = QString("QLabel { color : %1; }").arg(DEFCOLOR_DYNBTN_BG);
-const QString dynLblFGcss  = QString("QLabel { color : %1; background-color : %2; }")
-        .arg(DEFCOLOR_DYNBTN_ON).arg(DEFCOLOR_DYNBTN_ON_BG);
+const QString c_dynlbl_css_off = QString("QLabel { color : %1; }").arg(cdef_color_dynbtn_off);
+const QString c_dynlbl_css_bg  = QString("QLabel { color : %1; }").arg(cdef_color_dynbtn_bg);
+const QString c_dynlbl_css_fg  = QString("QLabel { color : %1; background-color : %2; }")
+        .arg(cdef_color_dynbtn_on).arg(cdef_color_dynbtn_on_bg);
 
 
 QSettings settings("QTau_Devgroup", "QTau");
-const QString SK_SCORE_DIR          = "last_score_dir";
-const QString SK_AUDIO_DIR          = "last_audio_dir";
-const QString SK_WIN_SIZE           = "window_size";
-const QString SK_WIN_MAX            = "window_fullscreen";
-const QString SK_SHOW_LOGNUM        = "show_new_log_number";
-const QString SK_DYNPANEL_VISIBLE   = "dynamics_panel_visible";
+
+const QString c_key_dir_score   = "last_score_dir";
+const QString c_key_dir_audio   = "last_audio_dir";
+const QString c_key_win_size    = "window_size";
+const QString c_key_win_max     = "window_fullscreen";
+const QString c_key_show_lognum = "show_new_log_number";
+const QString c_key_dynpanel_on = "dynamics_panel_visible";
+
+const QString c_doc_txt         = ":/tr/documentation_en.txt";
+const QString c_icon_app        = ":/images/appicon_ouka_alice.png";
+const QString c_icon_speaker    = ":/images/speaker.png";
+const QString c_icon_editor     = ":/images/b_notes.png";
+const QString c_icon_voices     = ":/images/b_mic.png";
+const QString c_icon_plugins    = ":/images/b_plug.png";
+const QString c_icon_settings   = ":/images/b_gear.png";
+const QString c_icon_doc        = ":/images/b_manual.png";
+const QString c_icon_log        = ":/images/b_envelope.png";
 
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent), ui(new Ui::MainWindow), doc(0), fgDynLbl(0), bgDynLbl(0),
-    logNewMessages(0), logHasErrors(false), showNewLogNumber(true)
+    QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 
-    setWindowIcon(QIcon(":/images/appicon_ouka_alice.png"));
-    setWindowTitle("QTau");
+    setWindowIcon(QIcon(c_icon_app));
+    setWindowTitle(c_qtau_name);
     setAcceptDrops(true);
     setContextMenuPolicy(Qt::NoContextMenu);
 
     //-----------------------------------------
 
     QLabel *meterLabel = new QLabel(QString("%1/%2") .arg(ns.notesInBar).arg(ns.noteLength), this);
-    QLabel *tempoLabel = new QLabel(QString("%1 bpm").arg(ns.tempo),                         this);
+    QLabel *tempoLabel = new QLabel(QString("%1 %2").arg(ns.tempo).arg(tr("bpm")),           this);
 
     QHBoxLayout *bpmHBL = new QHBoxLayout();
     bpmHBL->setContentsMargins(0,0,0,0);
@@ -80,7 +90,7 @@ MainWindow::MainWindow(QWidget *parent) :
     bpmHBL->addSpacing(5);
 
     QFrame *tempoPanel = new QFrame(this);
-    tempoPanel->setMinimumSize(CONST_MIN_PIANO_WIDTH, CONST_METER_HEIGHT);
+    tempoPanel->setMinimumSize(c_piano_min_width, c_meter_min_height);
     tempoPanel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
     tempoPanel->setContentsMargins(1,0,1,1);
     tempoPanel->setFrameStyle(QFrame::Panel | QFrame::Raised);
@@ -88,23 +98,23 @@ MainWindow::MainWindow(QWidget *parent) :
     tempoPanel->setLayout(bpmHBL);
 
     meter = new qtauMeterBar(this);
-    meter->setMinimumHeight(CONST_METER_HEIGHT);
+    meter->setMinimumHeight(c_meter_min_height);
     meter->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     meter->setContentsMargins(0,0,0,0);
 
     piano = new qtauPiano(ui->centralWidget);
     piano->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
-    piano->setMinimumSize(CONST_MIN_PIANO_WIDTH, CONST_MIN_PIANO_HEIGHT);
+    piano->setMinimumSize(c_piano_min_width, c_piano_min_height);
     piano->setContentsMargins(0,0,0,0);
 
     zoom = new QSlider(Qt::Horizontal, ui->centralWidget);
     zoom->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
-    zoom->setRange(0, CONST_ZOOMS - 1);
+    zoom->setRange(0, c_zoom_num - 1);
     zoom->setSingleStep(1);
     zoom->setPageStep(1);
-    zoom->setValue(DEFAULT_ZOOM_INDEX);
-    zoom->setMinimumWidth(CONST_MIN_PIANO_WIDTH);
-    zoom->setGeometry(0,0,CONST_MIN_PIANO_WIDTH,10);
+    zoom->setValue(cdef_zoom_index);
+    zoom->setMinimumWidth(c_piano_min_width);
+    zoom->setGeometry(0,0,c_piano_min_width,10);
     zoom->setContentsMargins(0,0,0,0);
 
     noteEditor = new qtauNoteEditor(ui->centralWidget);
@@ -116,7 +126,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     hscr->setContentsMargins(0,0,0,0);
     vscr->setContentsMargins(0,0,0,0);
-    hscr->setRange(0, ns.note.width() * ns.notesInBar * CONST_NUM_BARS);
+    hscr->setRange(0, ns.note.width() * ns.notesInBar * cdef_bars);
     vscr->setRange(0, ns.note.height() * 12 * ns.numOctaves);
     hscr->setSingleStep(ns.note.width());
     vscr->setSingleStep(ns.note.height());
@@ -132,13 +142,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QFrame *vocalControls = new QFrame(this);
     vocalControls->setContentsMargins(0,0,0,0);
-    vocalControls->setMinimumSize(CONST_MIN_PIANO_WIDTH, CONST_WAVEFORM_MIN_HEIGHT);
+    vocalControls->setMinimumSize(c_piano_min_width, c_waveform_min_height);
     vocalControls->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
     vocalControls->setFrameStyle(QFrame::Panel | QFrame::Raised);
 
     vocalWave = new qtauWaveform(this);
     vocalWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    vocalWave->setMinimumHeight(CONST_WAVEFORM_MIN_HEIGHT);
+    vocalWave->setMinimumHeight(c_waveform_min_height);
     vocalWave->setContentsMargins(0,0,0,0);
 
     QHBoxLayout *vocalWaveL = new QHBoxLayout();
@@ -164,13 +174,13 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QFrame *musicControls = new QFrame(this);
     musicControls->setContentsMargins(0,0,0,0);
-    musicControls->setMinimumSize(CONST_MIN_PIANO_WIDTH, CONST_WAVEFORM_MIN_HEIGHT);
+    musicControls->setMinimumSize(c_piano_min_width, c_waveform_min_height);
     musicControls->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
     musicControls->setFrameStyle(QFrame::Panel | QFrame::Raised);
 
     musicWave = new qtauWaveform(this);
     musicWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    musicWave->setMinimumHeight(CONST_WAVEFORM_MIN_HEIGHT);
+    musicWave->setMinimumHeight(c_waveform_min_height);
     musicWave->setContentsMargins(0,0,0,0);
 
     QHBoxLayout *musicWaveL = new QHBoxLayout();
@@ -191,15 +201,15 @@ MainWindow::MainWindow(QWidget *parent) :
 
     QGridLayout *dynBtnL = new QGridLayout();
 
-    QString btnNames[CONST_DYN_BUTTONS] = {"VEL", "DYN", "BRE", "BRI", "CLE", "OPE", "GEN", "POR", "PIT", "PBS"};
+    QString btnNames[c_dynbuttons_num] = {"VEL", "DYN", "BRE", "BRI", "CLE", "OPE", "GEN", "POR", "PIT", "PBS"};
 
-    for (int i = 0; i < CONST_DYN_BUTTONS; ++i)
+    for (int i = 0; i < c_dynbuttons_num; ++i)
     {
         qtauDynLabel *l = new qtauDynLabel(btnNames[i], this);
         l->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Minimum);
         dynBtnL->addWidget(l, i / 2, i % 2, 1, 1);
 
-        l->setStyleSheet(dynLblOFFcss);
+        l->setStyleSheet(c_dynlbl_css_off);
         l->setFrameStyle(QFrame::Box);
         l->setLineWidth(1);
 
@@ -207,11 +217,11 @@ MainWindow::MainWindow(QWidget *parent) :
         connect(l, SIGNAL(rightClicked()), SLOT(dynBtnRClicked()));
     }
 
-    dynBtnL->setRowStretch(CONST_DYN_BUTTONS / 2, 100);
+    dynBtnL->setRowStretch(c_dynbuttons_num / 2, 100);
 
     QFrame *dynBtnPanel = new QFrame(this);
     dynBtnPanel->setContentsMargins(0,0,0,0);
-    dynBtnPanel->setMinimumSize(CONST_MIN_PIANO_WIDTH, CONST_DRAWZONE_MIN_HEIGHT);
+    dynBtnPanel->setMinimumSize(c_piano_min_width, c_drawzone_min_height);
     dynBtnPanel->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
     dynBtnPanel->setFrameStyle(QFrame::Panel | QFrame::Raised);
 
@@ -219,7 +229,7 @@ MainWindow::MainWindow(QWidget *parent) :
 
     drawZone = new qtauDynDrawer(ui->centralWidget);
     drawZone->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-    drawZone->setMinimumHeight(CONST_DRAWZONE_MIN_HEIGHT);
+    drawZone->setMinimumHeight(c_drawzone_min_height);
     drawZone->setContentsMargins(0,0,0,0);
 
     QScrollBar *dummySB3 = new QScrollBar(this);
@@ -316,7 +326,7 @@ MainWindow::MainWindow(QWidget *parent) :
     docpad->setUndoRedoEnabled(false);
     docpad->setContextMenuPolicy(Qt::NoContextMenu);
 
-    QFile embeddedDocTxt(":/tr/documentation_en.txt");
+    QFile embeddedDocTxt(c_doc_txt);
 
     if (embeddedDocTxt.open(QFile::ReadOnly))
     {
@@ -352,7 +362,6 @@ MainWindow::MainWindow(QWidget *parent) :
     logL->addWidget(logpad, 0, 0, 1, 1);
 
     logPanel->setLayout(logL);
-    connect(vsLog::instance(), SIGNAL(message(const QString&,int)), SLOT(onLog(const QString&, int)));
 
     //---- Combining tabs togeter ------------------
 
@@ -363,12 +372,12 @@ MainWindow::MainWindow(QWidget *parent) :
     tabs->setTabPosition(QTabWidget::South);
     tabs->setMovable(false); // just to be sure
 
-    tabs->addTab(editorPanel,   QIcon(":/images/b_notes.png"),    tr("Editor"));
-    tabs->addTab(voicesPanel,   QIcon(":/images/b_mic.png"),      tr("Voices"));
-    tabs->addTab(pluginsPanel,  QIcon(":/images/b_plug.png"),     tr("Plugins"));
-    tabs->addTab(settingsPanel, QIcon(":/images/b_gear.png"),     tr("Settings"));
-    tabs->addTab(docsPanel,     QIcon(":/images/b_manual.png"),   tr("Documentation"));
-    tabs->addTab(logPanel,      QIcon(":/images/b_envelope.png"), tr("Log"));
+    tabs->addTab(editorPanel,   QIcon(c_icon_editor),   tr("Editor"));
+    tabs->addTab(voicesPanel,   QIcon(c_icon_voices),   tr("Voices"));
+    tabs->addTab(pluginsPanel,  QIcon(c_icon_plugins),  tr("Plugins"));
+    tabs->addTab(settingsPanel, QIcon(c_icon_settings), tr("Settings"));
+    tabs->addTab(docsPanel,     QIcon(c_icon_doc),      tr("Documentation"));
+    tabs->addTab(logPanel,      QIcon(c_icon_log),      tr("Log"));
 
     tabs->widget(0)->setContentsMargins(0,0,0,0);
     tabs->widget(1)->setContentsMargins(0,0,0,0);
@@ -415,7 +424,7 @@ MainWindow::MainWindow(QWidget *parent) :
     volume->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     connect(playerTB, SIGNAL(orientationChanged(Qt::Orientation)), volume, SLOT(setOrientation(Qt::Orientation)));
 
-    muteBtn = new QAction(QIcon(":/images/speaker.png"), "", this);
+    muteBtn = new QAction(QIcon(c_icon_speaker), "", this);
     muteBtn->setCheckable(true);
     connect(muteBtn, SIGNAL(toggled(bool)), SLOT(onMute(bool)));
 
@@ -428,8 +437,6 @@ MainWindow::MainWindow(QWidget *parent) :
     lengthCombo  ->addItems(QStringList() << "♪/4" << "♪/8" << "♪/16" << "♪/32" << "♪/64");
     quantizeCombo->setCurrentIndex(3);
     lengthCombo  ->setCurrentIndex(3);
-    connect(quantizeCombo, SIGNAL(currentIndexChanged(int)), SLOT(onQuantizeSelected(int)));
-    connect(lengthCombo,   SIGNAL(currentIndexChanged(int)), SLOT(onNotelengthSelected(int)));
 
     toolsTB->addAction(ui->actionEdit_Mode);
     toolsTB->addAction(ui->actionGrid_Snap);
@@ -446,62 +453,67 @@ MainWindow::MainWindow(QWidget *parent) :
     toolbars.append(toolsTB);
 
     //----------------------------------------------
-    connect(piano,      SIGNAL(heightChanged(int)), SLOT(onPianoHeightChanged(int)));
-    connect(noteEditor, SIGNAL(widthChanged(int)),  SLOT(onNoteEditorWidthChanged(int)));
+    connect(quantizeCombo, SIGNAL(currentIndexChanged(int)), SLOT(onQuantizeSelected(int)));
+    connect(lengthCombo,   SIGNAL(currentIndexChanged(int)), SLOT(onNotelengthSelected(int)));
 
-    connect(meter,      SIGNAL(scrolled(int)),      SLOT(notesHScrolled(int)));
-    connect(piano,      SIGNAL(scrolled(int)),      SLOT(notesVScrolled(int)));
-    connect(drawZone,   SIGNAL(scrolled(int)),      SLOT(notesHScrolled(int)));
-    connect(noteEditor, SIGNAL(vscrolled(int)),     SLOT(notesVScrolled(int)));
-    connect(noteEditor, SIGNAL(hscrolled(int)),     SLOT(notesHScrolled(int)));
-    connect(vocalWave,  SIGNAL(scrolled(int)),      SLOT(notesHScrolled(int)));
-    connect(musicWave,  SIGNAL(scrolled(int)),      SLOT(notesHScrolled(int)));
-    connect(vscr,       SIGNAL(valueChanged(int)),  SLOT(vertScrolled(int)));
-    connect(hscr,       SIGNAL(valueChanged(int)),  SLOT(horzScrolled(int)));
+    connect(vsLog::instance(), &vsLog::message,             this, &MainWindow::onLog);
 
-    connect(noteEditor, SIGNAL(rmbScrolled(QPoint,QPoint)), SLOT(onEditorRMBScrolled(QPoint,QPoint)));
-    connect(noteEditor, SIGNAL(requestsOffset(QPoint)),     SLOT(onEditorRequestOffset(QPoint)));
+    connect(piano,      &qtauPiano      ::heightChanged,    this, &MainWindow::onPianoHeightChanged);
+    connect(noteEditor, &qtauNoteEditor ::widthChanged,     this, &MainWindow::onNoteEditorWidthChanged);
 
-    connect(zoom,       SIGNAL(valueChanged(int)),  SLOT(onZoomed(int)));
-    connect(meter,      SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
-    connect(noteEditor, SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
-    connect(drawZone,   SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
-    connect(vocalWave,  SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
-    connect(musicWave,  SIGNAL(zoomed(int)),        SLOT(onEditorZoomed(int)));
+    connect(meter,      &qtauMeterBar   ::scrolled,         this, &MainWindow::notesHScrolled);
+    connect(piano,      &qtauPiano      ::scrolled,         this, &MainWindow::notesVScrolled);
+    connect(drawZone,   &qtauDynDrawer  ::scrolled,         this, &MainWindow::notesHScrolled);
+    connect(noteEditor, &qtauNoteEditor ::vscrolled,        this, &MainWindow::notesVScrolled);
+    connect(noteEditor, &qtauNoteEditor ::hscrolled,        this, &MainWindow::notesHScrolled);
+    connect(vocalWave,  &qtauWaveform   ::scrolled,         this, &MainWindow::notesHScrolled);
+    connect(musicWave,  &qtauWaveform   ::scrolled,         this, &MainWindow::notesHScrolled);
+    connect(vscr,       &QScrollBar     ::valueChanged,     this, &MainWindow::vertScrolled);
+    connect(hscr,       &QScrollBar     ::valueChanged,     this, &MainWindow::horzScrolled);
 
-    connect(ui->actionQuit,    SIGNAL(triggered()), SLOT(onQuit()));
-    connect(ui->actionOpen,    SIGNAL(triggered()), SLOT(onOpenUST()));
-    connect(ui->actionSave,    SIGNAL(triggered()), SLOT(onSaveUST()));
-    connect(ui->actionSave_as, SIGNAL(triggered()), SLOT(onSaveUSTAs()));
+    connect(noteEditor, &qtauNoteEditor ::rmbScrolled,      this, &MainWindow::onEditorRMBScrolled);
+    connect(noteEditor, &qtauNoteEditor ::requestsOffset,   this, &MainWindow::onEditorRequestOffset);
 
-    connect(ui->actionUndo,    SIGNAL(triggered()), SLOT(onUndo()));
-    connect(ui->actionRedo,    SIGNAL(triggered()), SLOT(onRedo()));
-    connect(ui->actionDelete,  SIGNAL(triggered()), SLOT(onDelete()));
+    connect(zoom,       &QSlider        ::valueChanged,     this, &MainWindow::onZoomed);
+    connect(meter,      &qtauMeterBar   ::zoomed,           this, &MainWindow::onEditorZoomed);
+    connect(noteEditor, &qtauNoteEditor ::zoomed,           this, &MainWindow::onEditorZoomed);
+    connect(drawZone,   &qtauDynDrawer  ::zoomed,           this, &MainWindow::onEditorZoomed);
+    connect(vocalWave,  &qtauWaveform   ::zoomed,           this, &MainWindow::onEditorZoomed);
+    connect(musicWave,  &qtauWaveform   ::zoomed,           this, &MainWindow::onEditorZoomed);
 
-    connect(ui->actionEdit_Mode, SIGNAL(triggered(bool)), SLOT(onEditMode(bool)));
-    connect(ui->actionGrid_Snap, SIGNAL(triggered(bool)), SLOT(onGridSnap(bool)));
+    connect(ui->actionQuit,      &QAction::triggered, [=]() { this->close(); });
+    connect(ui->actionOpen,      &QAction::triggered, this, &MainWindow::onOpenUST);
+    connect(ui->actionSave,      &QAction::triggered, this, &MainWindow::onSaveUST);
+    connect(ui->actionSave_as,   &QAction::triggered, this, &MainWindow::onSaveUSTAs);
 
-    connect(ui->actionSave_audio_as, SIGNAL(triggered()), SLOT(onSaveAudioAs()));
+    connect(ui->actionUndo,      &QAction::triggered, this, &MainWindow::onUndo);
+    connect(ui->actionRedo,      &QAction::triggered, this, &MainWindow::onRedo);
+    connect(ui->actionDelete,    &QAction::triggered, this, &MainWindow::onDelete);
+
+    connect(ui->actionEdit_Mode, &QAction::triggered, this, &MainWindow::onEditMode);
+    connect(ui->actionGrid_Snap, &QAction::triggered, this, &MainWindow::onGridSnap);
+
+    connect(ui->actionSave_audio_as, &QAction::triggered, this, &MainWindow::onSaveAudioAs);
 
     //----------------------------------------------
 
-    lastScoreDir     = settings.value(SK_SCORE_DIR,   "").toString();
-    lastAudioDir     = settings.value(SK_AUDIO_DIR,   "").toString();
-    showNewLogNumber = settings.value(SK_SHOW_LOGNUM, true).toBool();
+    lastScoreDir     = settings.value(c_key_dir_score,   "").toString();
+    lastAudioDir     = settings.value(c_key_dir_audio,   "").toString();
+    showNewLogNumber = settings.value(c_key_show_lognum, true).toBool();
 
-    if (!settings.value(SK_DYNPANEL_VISIBLE).toBool())
+    if (!settings.value(c_key_dynpanel_on).toBool())
     {
         QList<int> panelSizes = spl->sizes();
         panelSizes[3] = 0;
         spl->setSizes(panelSizes);
     }
 
-    if (settings.value(SK_WIN_MAX).toBool())
+    if (settings.value(c_key_win_max).toBool())
         showMaximized();
     else
     {
         QRect winGeom = geometry();
-        QRect setGeom = settings.value(SK_WIN_SIZE, QRect(QPoint(0,0), minimumSize())).value<QRect>();
+        QRect setGeom = settings.value(c_key_win_size, QRect(QPoint(0,0), minimumSize())).value<QRect>();
 
         if (setGeom.width() >= winGeom.width() && setGeom.height() >= setGeom.height())
             setGeometry(setGeom);
@@ -510,28 +522,27 @@ MainWindow::MainWindow(QWidget *parent) :
     //----------------------------------------------
 
     vsLog::instance()->enableHistory(false);
-    onLog(QString("\t%1 %2 @ %3").arg(tr("Launching QTau")).arg(QTAU_VERSION).arg(__DATE__), (int)vsLog::success);
+    onLog(QString("\t%1 %2 @ %3").arg(tr("Launching QTau")).arg(c_qtau_ver).arg(__DATE__), ELog::success);
 
-    onLog("\t---------------------------------------------", (int)vsLog::info);
+    onLog("\t---------------------------------------------", ELog::info);
     vsLog::r(); // print stored messages from program startup
-    onLog("\t---------------------------------------------", (int)vsLog::info);
+    onLog("\t---------------------------------------------", ELog::info);
     vsLog::n();
 }
 
 void MainWindow::closeEvent(QCloseEvent *event)
 {
     // store settings
-    settings.setValue(SK_SCORE_DIR,         lastScoreDir);
-    settings.setValue(SK_AUDIO_DIR,         lastAudioDir);
-    settings.setValue(SK_WIN_SIZE,          geometry());
-    settings.setValue(SK_WIN_MAX,           isMaximized());
-    settings.setValue(SK_SHOW_LOGNUM,       showNewLogNumber);
-    settings.setValue(SK_DYNPANEL_VISIBLE,  drawZonePanel->isVisible());
+    settings.setValue(c_key_dir_score,   lastScoreDir);
+    settings.setValue(c_key_dir_audio,   lastAudioDir);
+    settings.setValue(c_key_win_size,    geometry());
+    settings.setValue(c_key_win_max,     isMaximized());
+    settings.setValue(c_key_show_lognum, showNewLogNumber);
+    settings.setValue(c_key_dynpanel_on, drawZonePanel->isVisible());
 
     event->accept();
 }
 
-void MainWindow::onQuit() { close();   }
 MainWindow::~MainWindow() { delete ui; }
 
 //========================================================================================
@@ -542,39 +553,37 @@ bool MainWindow::setController(qtauController &c, qtauSession &s)
     // NOTE: bind what uses qtauSession only here (menu/toolbar button states etc)
     doc = &s;
 
-    connect(noteEditor, SIGNAL(editorEvent(qtauEvent*)), doc, SLOT(onUIEvent(qtauEvent*)));
+    connect(noteEditor, &qtauNoteEditor::editorEvent, doc, &qtauSession::onUIEvent      );
 
-    connect(doc, SIGNAL(dataReloaded()),       SLOT(onDocReloaded()));
-    connect(doc, SIGNAL(modifiedStatus(bool)), SLOT(onDocStatus(bool)));
-    connect(doc, SIGNAL(undoStatus(bool)),     SLOT(onUndoStatus(bool)));
-    connect(doc, SIGNAL(redoStatus(bool)),     SLOT(onRedoStatus(bool)));
+    connect(doc, &qtauSession::dataReloaded,   this, &MainWindow::onDocReloaded         );
+    connect(doc, &qtauSession::modifiedStatus, this, &MainWindow::onDocStatus           );
+    connect(doc, &qtauSession::undoStatus,     this, &MainWindow::onUndoStatus          );
+    connect(doc, &qtauSession::redoStatus,     this, &MainWindow::onRedoStatus          );
 
-    connect(doc, SIGNAL(vocalSet()), SLOT(onVocalAudioChanged()));
-    connect(doc, SIGNAL(musicSet()), SLOT(onMusicAudioChanged()));
+    connect(doc, &qtauSession::vocalSet,       this, &MainWindow::onVocalAudioChanged   );
+    connect(doc, &qtauSession::musicSet,       this, &MainWindow::onMusicAudioChanged   );
 
-    connect(doc, SIGNAL(onEvent(qtauEvent*)),  SLOT(onDocEvent(qtauEvent*)));
-    connect(doc, SIGNAL(playbackStateChanged(qtauSessionPlayback::State)), SLOT(onPlaybackState(qtauSessionPlayback::State)));
+    connect(doc, &qtauSession::onEvent,        this, &MainWindow::onDocEvent            );
+    connect(doc, &qtauSession::playbackStateChanged, this, &MainWindow::onPlaybackState );
 
-    connect(ui->actionPlay,   SIGNAL(triggered()), doc, SLOT(startPlayback ()));
-    connect(ui->actionStop,   SIGNAL(triggered()), doc, SLOT(stopPlayback  ()));
-    connect(ui->actionBack,   SIGNAL(triggered()), doc, SLOT(resetPlayback ()));
-    connect(ui->actionRepeat, SIGNAL(triggered()), doc, SLOT(repeatPlayback()));
+    connect(ui->actionPlay,   &QAction::triggered, doc, &qtauSession::startPlayback );
+    connect(ui->actionStop,   &QAction::triggered, doc, &qtauSession::stopPlayback  );
+    connect(ui->actionBack,   &QAction::triggered, doc, &qtauSession::resetPlayback );
+    connect(ui->actionRepeat, &QAction::triggered, doc, &qtauSession::repeatPlayback);
 
+    connect(this,   &MainWindow::loadUST,      &c, &qtauController::onLoadUST       );
+    connect(this,   &MainWindow::saveUST,      &c, &qtauController::onSaveUST       );
+    connect(this,   &MainWindow::saveAudio,    &c, &qtauController::onSaveAudio     );
+
+    connect(this,   &MainWindow::loadAudio,    &c, &qtauController::onLoadAudio     );
+    connect(volume, &QSlider   ::valueChanged, &c, &qtauController::onVolumeChanged );
+    connect(this,   &MainWindow::setVolume,    &c, &qtauController::onVolumeChanged );
+
+    connect(piano, &qtauPiano::keyPressed,     &c, &qtauController::pianoKeyPressed );
+    connect(piano, &qtauPiano::keyReleased,    &c, &qtauController::pianoKeyReleased);
     //-----------------------------------------------------------------------
 
-    connect(this, SIGNAL(loadUST(QString)),        &c, SLOT(onLoadUST(QString)));
-    connect(this, SIGNAL(saveUST(QString,bool)),   &c, SLOT(onSaveUST(QString,bool)));
-    connect(this, SIGNAL(saveAudio(QString,bool)), &c, SLOT(onSaveAudio(QString,bool)));
-
-    connect(this, SIGNAL(loadAudio(QString)),    &c, SLOT(onLoadAudio(QString)));
-    connect(volume, SIGNAL(valueChanged(int)),   &c, SLOT(onVolumeChanged(int)));
-    connect(this,   SIGNAL(setVolume(int)),      &c, SLOT(onVolumeChanged(int)));
     c.onVolumeChanged(volume->value());
-
-    //-----------------------------------------------------------------------
-    connect(piano, SIGNAL(keyPressed (int)), &c, SLOT(pianoKeyPressed (int)));
-    connect(piano, SIGNAL(keyReleased(int)), &c, SLOT(pianoKeyReleased(int)));
-    //-----------------------------------------------------------------------
 
     // widget configuration - maybe read app settings here?
     noteEditor->setRMBScrollEnabled(!ui->actionEdit_Mode->isChecked());
@@ -713,16 +722,16 @@ void MainWindow::onPianoHeightChanged(int newHeight)
 
 void MainWindow::onNoteEditorWidthChanged(int newWidth)
 {
-    hscr->setMaximum(ns.note.width() * ns.notesInBar * CONST_NUM_BARS - newWidth + 1);
+    hscr->setMaximum(ns.note.width() * ns.notesInBar * cdef_bars - newWidth + 1);
     hscr->setPageStep(noteEditor->geometry().width());
 }
 
-void MainWindow::onPlaybackState(qtauSessionPlayback::State state)
+void MainWindow::onPlaybackState(EAudioPlayback state)
 {
     switch (state)
     {
-    case qtauSessionPlayback::NothingToPlay:
-    case qtauSessionPlayback::NeedsSynthesis:
+    case EAudioPlayback::noAudio:
+    case EAudioPlayback::needsSynth:
         ui->actionPlay->setText(tr("Play"));
         ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
         ui->actionStop->setEnabled(false);
@@ -733,11 +742,11 @@ void MainWindow::onPlaybackState(qtauSessionPlayback::State state)
         ui->actionPlay->setChecked(false);
         ui->actionRepeat->setChecked(false);
 
-        ui->actionPlay->setEnabled(state == qtauSessionPlayback::NeedsSynthesis);
+        ui->actionPlay->setEnabled(state == EAudioPlayback::needsSynth);
         break;
 
-    case qtauSessionPlayback::Repeating: // this and following states imply that actions were enabled before
-    case qtauSessionPlayback::Playing:
+    case EAudioPlayback::repeating: // this and following states imply that actions were enabled before
+    case EAudioPlayback::playing:
         ui->actionPlay->setIcon(QIcon(":/images/b_pause.png"));
         ui->actionPlay->setText(tr("Pause"));
         ui->actionStop->setEnabled(true);
@@ -746,17 +755,17 @@ void MainWindow::onPlaybackState(qtauSessionPlayback::State state)
         ui->actionSave_audio_as->setEnabled(true);
         break;
 
-    case qtauSessionPlayback::Stopped:
+    case EAudioPlayback::stopped:
         ui->actionPlay->setChecked(false);
         ui->actionRepeat->setChecked(false);
-    case qtauSessionPlayback::Paused:
+    case EAudioPlayback::paused:
         ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
         ui->actionPlay->setText(tr("Play"));
         ui->actionSave_audio_as->setEnabled(true);
         break;
 
     default:
-        vsLog::e(QString("Window got unknown session playback state %1").arg(state));
+        vsLog::e(QString("Window got unknown session playback state %1").arg((char)state));
     }
 }
 
@@ -823,17 +832,17 @@ void MainWindow::dynBtnLClicked()
         if (fgDynLbl)
         {
             fgDynLbl->setState(qtauDynLabel::off);
-            fgDynLbl->setStyleSheet(dynLblOFFcss);
+            fgDynLbl->setStyleSheet(c_dynlbl_css_off);
         }
 
         if (l == bgDynLbl)
         {
             bgDynLbl->setState(qtauDynLabel::off);
-            bgDynLbl->setStyleSheet(dynLblOFFcss);
+            bgDynLbl->setStyleSheet(c_dynlbl_css_off);
             bgDynLbl = 0;
         }
 
-        l->setStyleSheet(dynLblFGcss);
+        l->setStyleSheet(c_dynlbl_css_fg);
         fgDynLbl = l;
     }
 }
@@ -848,7 +857,7 @@ void MainWindow::dynBtnRClicked()
         {
             // clicking on same dynkey - switch it off
             bgDynLbl->setState(qtauDynLabel::off);
-            bgDynLbl->setStyleSheet(dynLblOFFcss);
+            bgDynLbl->setStyleSheet(c_dynlbl_css_off);
             bgDynLbl = 0;
         }
         else
@@ -856,30 +865,30 @@ void MainWindow::dynBtnRClicked()
             if (bgDynLbl)
             {   // switch off previous one, if any
                 bgDynLbl->setState(qtauDynLabel::off);
-                bgDynLbl->setStyleSheet(dynLblOFFcss);
+                bgDynLbl->setStyleSheet(c_dynlbl_css_off);
                 bgDynLbl = 0;
             }
 
             if (l != fgDynLbl)
             {   // clicking on not-foreground dynkey
-                l->setStyleSheet(dynLblBGcss);
+                l->setStyleSheet(c_dynlbl_css_bg);
                 bgDynLbl = l;
             }
         }
     }
 }
 
-void MainWindow::onLog(const QString &msg, int type)
+void MainWindow::onLog(const QString &msg, ELog type)
 {
     QString color = "black";
     bool viewingLog = tabs->currentIndex() == tabs->count() - 1;
 
-    switch((vsLog::msgType)type)
+    switch(type)
     {
-    case vsLog::error:
+    case ELog::error:
         color = "red";
         break;
-    case vsLog::success:
+    case ELog::success:
         color = "green";
         break;
     default: break;
@@ -895,9 +904,9 @@ void MainWindow::onLog(const QString &msg, int type)
             logNewMessages++;
         }
 
-        if ((vsLog::msgType)type == vsLog::error)
+        if (type == ELog::error)
         {
-            tb->setTabTextColor(tb->count() - 1, QColor(DEFCOLOR_LOGTAB_ERR));
+            tb->setTabTextColor(tb->count() - 1, QColor(cdef_color_logtab_err));
             logHasErrors = true;
         }
     }
@@ -936,10 +945,10 @@ void MainWindow::onTabSelected(int index)
 
 void MainWindow::onZoomed(int z)
 {
-    assert(z >= 0 && z < CONST_ZOOMS); // because if it isn't, you're DOOMED
+    assert(z >= 0 && z < c_zoom_num); // because if it isn't, you're DOOMED
 
     // modify note data and send it to widgets
-    ns.note.setWidth(ZOOM_NOTE_WIDTHS[z]);
+    ns.note.setWidth(c_zoom_note_widths[z]);
 
     meter     ->configure(ns);
     piano     ->configure(ns);
@@ -954,7 +963,7 @@ void MainWindow::onZoomed(int z)
 
     // modify scrollbar sizes and position
     double hscr_val = (double)hscr->value() / hscr->maximum();
-    hscr->setMaximum(ns.note.width()  * ns.notesInBar * CONST_NUM_BARS - noteEditor->width() + 1);
+    hscr->setMaximum(ns.note.width()  * ns.notesInBar * cdef_bars - noteEditor->width() + 1);
     hscr->setValue(hscr->maximum() * hscr_val);
     hscr->setSingleStep(ns.note.width());
 
@@ -965,7 +974,7 @@ void MainWindow::onEditorZoomed(int delta)
 {
     if (delta != 0)
         if ((delta > 0 && zoom->value() >= 0) ||
-            (delta < 0 && zoom->value() < CONST_ZOOMS))
+            (delta < 0 && zoom->value() < c_zoom_num))
             zoom->setValue(zoom->value() + ((delta > 0) ? 1 : -1));
 }
 

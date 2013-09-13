@@ -9,32 +9,32 @@
 #include <QTime>
 #include <QPixmap>
 
-const int CONST_LBLCACHE_LINE_HEIGHT = 12;
-const int CONST_LBLCACHE_LINE_WIDTH  = 20;
-const int CONST_LBLCACHE_CACHED_NUM  = 200;
-const int CONST_LBLCACHE_FONT_HEIGHT = 8;
+const int c_lblcache_line_height = 12;
+const int c_lblcache_line_width  = 20;
+const int c_lblcache_line_cached = 200;
+const int c_lblcache_font_size   = 8;
 
-const int CONST_LBL_HOFFSET = 15; // drawing offset from top-left of octave line
-const int CONST_LBL_VOFFSET = 10;
+const int c_lblcache_hoff = 15; // drawing offset from top-left of octave line
+const int c_lblcache_voff = 10;
 
-const QString CONST_LBLCACHE_FONT_NAME = "Arial";
+const QString c_lblcache_font = "Arial";
 
 
 qtauMeterBar::qtauMeterBar(QWidget *parent) :
-    QWidget(parent), offset(0), bgCache(0)
+    QWidget(parent)
 {
     // cache bar numbers into pixmap - maybe that's a bit of an overkill, but won't hurt RAM usage much
-    labelCache = new QPixmap(CONST_LBLCACHE_LINE_WIDTH, CONST_LBLCACHE_LINE_HEIGHT * CONST_LBLCACHE_CACHED_NUM);
+    labelCache = new QPixmap(c_lblcache_line_width, c_lblcache_line_height * c_lblcache_line_cached);
     labelCache->fill(Qt::transparent);
 
     QPainter p(labelCache);
-    p.setFont(QFont(CONST_LBLCACHE_FONT_NAME, CONST_LBLCACHE_FONT_HEIGHT));
+    p.setFont(QFont(c_lblcache_font, c_lblcache_font_size));
 
-    QRect lblR(0, 0, CONST_LBLCACHE_LINE_WIDTH, CONST_LBLCACHE_LINE_HEIGHT);
+    QRect lblR(0, 0, c_lblcache_line_width, c_lblcache_line_height);
 
-    for (int i = 0; i < CONST_LBLCACHE_CACHED_NUM; ++i)
+    for (int i = 0; i < c_lblcache_line_cached; ++i)
     {
-        lblR.moveTop(i * CONST_LBLCACHE_LINE_HEIGHT);
+        lblR.moveTop(i * c_lblcache_line_height);
         p.drawText(lblR, QString("%1").arg(i + 1));
     }
 }
@@ -54,7 +54,7 @@ void qtauMeterBar::setOffset(int off)
     }
 }
 
-void qtauMeterBar::configure(const noteSetup &newSetup)
+void qtauMeterBar::configure(const SNoteSetup &newSetup)
 {
     ns = newSetup;
     updateCache();
@@ -89,8 +89,8 @@ void qtauMeterBar::paintEvent(QPaintEvent *event)
 
     for (int i = firstBar; i <= lastBar; ++i, barScreenOffset += barWidth)
         cachedLabels.append(QPainter::PixmapFragment::create(
-            QPointF(barScreenOffset + CONST_LBL_HOFFSET, CONST_LBL_VOFFSET),
-            QRectF(0, i * CONST_LBLCACHE_LINE_HEIGHT, CONST_LBLCACHE_LINE_WIDTH, CONST_LBLCACHE_LINE_HEIGHT)));
+            QPointF(barScreenOffset + c_lblcache_hoff, c_lblcache_voff),
+            QRectF(0, i * c_lblcache_line_height, c_lblcache_line_width, c_lblcache_line_height)));
 
     if (!cachedLabels.isEmpty())
         p.drawPixmapFragments(cachedLabels.data(), cachedLabels.size(), *labelCache);
@@ -181,9 +181,9 @@ void qtauMeterBar::updateCache()
     bgCache->fill(Qt::white);
     QPainter p(bgCache);
 
-    p.setPen(QColor(DEFCOLOR_INNER_LINE));
+    p.setPen(QColor(cdef_color_inner_line));
     p.drawLines(noteLines);
 
-    p.setPen(QColor(DEFCOLOR_OUTER_LINE));
+    p.setPen(QColor(cdef_color_outer_line));
     p.drawLines(barLines);
 }

@@ -275,7 +275,7 @@ void qtauController::onAudioPlaybackEnded()
 //        player->play();
 
     playState.state = Stopped;
-    activeSession->setPlaybackState(qtauSessionPlayback::Stopped);
+    activeSession->setPlaybackState(EAudioPlayback::stopped);
 }
 
 void qtauController::onVolumeChanged(int level)
@@ -292,7 +292,7 @@ void qtauController::onRequestSynthesis()
             if (playState.state != Stopped)
             {
                 player->stop();
-                activeSession->setPlaybackState(qtauSessionPlayback::Stopped);
+                activeSession->setPlaybackState(EAudioPlayback::stopped);
             }
 
             ISynth *s = synths.values().first();
@@ -321,8 +321,8 @@ void qtauController::onRequestSynthesis()
 void qtauController::onRequestStartPlayback()
 {
     // play only vocal or only audio (depending on what's available), or a mixdown of both
-    qtauSession::SVocalWaveSetup &v = activeSession->getVocal();
-    qtauSession::SMusicWaveSetup &m = activeSession->getMusic();
+    qtauSession::VocalWaveSetup &v = activeSession->getVocal();
+    qtauSession::MusicWaveSetup &m = activeSession->getMusic();
 
     bool gotVocal = v.vocalWave && !v.vocalWave->buffer().isEmpty();
     bool gotMusic = m.musicWave && !m.musicWave->buffer().isEmpty();
@@ -336,7 +336,7 @@ void qtauController::onRequestStartPlayback()
         else
         {
             playState.state = Playing;
-            activeSession->setPlaybackState(qtauSessionPlayback::Playing);
+            activeSession->setPlaybackState(EAudioPlayback::playing);
 
             if (!v.vocalWave->isOpen())
                 v.vocalWave->open(QIODevice::ReadOnly);
@@ -361,7 +361,7 @@ void qtauController::onRequestStartPlayback()
             }
 
             playState.state = Playing;
-            activeSession->setPlaybackState(qtauSessionPlayback::Playing);
+            activeSession->setPlaybackState(EAudioPlayback::playing);
 
             emit playTrack(*m.musicWave);
         }
@@ -375,7 +375,7 @@ void qtauController::onRequestPausePlayback()
     if (playState.state == Playing || playState.state == Repeating)
     {
         playState.state = Paused;
-        activeSession->setPlaybackState(qtauSessionPlayback::Paused);
+        activeSession->setPlaybackState(EAudioPlayback::paused);
         player->pause();
     }
     else vsLog::e("Controller isn't playing anything, can't pause playback.");
@@ -386,7 +386,7 @@ void qtauController::onRequestStopPlayback()
     if (playState.state == Playing || playState.state == Repeating)
     {
         playState.state = Stopped;
-        activeSession->setPlaybackState(qtauSessionPlayback::Stopped);
+        activeSession->setPlaybackState(EAudioPlayback::stopped);
         player->stop();
     }
     else vsLog::e("Controller isn't playing anything, can't pause playback.");

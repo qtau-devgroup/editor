@@ -49,7 +49,7 @@ public:
     ~qtauDynDrawer();
 
     void setOffset(int off);
-    void configure(const noteSetup &newSetup);
+    void configure(const SNoteSetup &newSetup);
 
 signals:
     void scrolled(int delta);
@@ -68,11 +68,11 @@ protected:
     void mouseReleaseEvent    (QMouseEvent  *event);
     void wheelEvent           (QWheelEvent  *event);
 
-    int offset;
+    int offset = 0;
 
-    noteSetup ns;
+    SNoteSetup ns;
 
-    QPixmap *bgCache;
+    QPixmap *bgCache = nullptr;
     void updateCache();
 
 };

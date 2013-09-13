@@ -43,26 +43,22 @@ public:
     void setModified(bool m);
     void setSaved(); // if doc was saved at this point
 
-    qtauSessionPlayback::EState playbackState() const { return playSt; }
-    void setPlaybackState(qtauSessionPlayback::EState state);
+    EAudioPlayback playbackState() const { return playSt; }
+    void setPlaybackState(EAudioPlayback state);
 
-    typedef struct SVocalWaveSetup {
-        qtauAudioSource *vocalWave;
+    typedef struct {
+        qtauAudioSource *vocalWave = nullptr;
 
-        bool  needsSynthesis;
-        float volume;
-
-        SVocalWaveSetup() : vocalWave(0), needsSynthesis(true), volume(1) {}
+        bool  needsSynthesis = true;
+        float volume         = 1;
     } VocalWaveSetup;
 
-    typedef struct SMusicWaveSetup {
-        qtauAudioSource *musicWave;
+    typedef struct {
+        qtauAudioSource *musicWave = nullptr;
 
-        qint64 offset;
-        int    tempo;
-        float  volume;
-
-        SMusicWaveSetup() : musicWave(0), offset(0), tempo(120), volume(1) {}
+        qint64 offset = 0;
+        int    tempo  = 120;
+        float  volume = 1;
     } MusicWaveSetup;
 
     VocalWaveSetup& getVocal() { return vocal; }
@@ -74,7 +70,7 @@ signals:
     void redoStatus    (bool); /// if can apply previously reverted action
 
     void dataReloaded();       /// when data is changed completely
-    void playbackStateChanged(qtauSessionPlayback::State);
+    void playbackStateChanged(EAudioPlayback);
 
     void vocalSet(); // when session gets synthesized audio from score
     void musicSet(); // when user adds bg (off-vocal?) music to play with synthesized vocals
@@ -102,9 +98,9 @@ public slots:
 protected:
     bool    parseUSTStrings(QStringList ustStrings);
     QString filePath;
-    QString docName;
-    bool    isModified;
-    bool    hadSavePoint; // if was saved having a non-empty event stack
+    QString docName      = QStringLiteral("Untitled");
+    bool    isModified   = false;
+    bool    hadSavePoint = false; // if was saved having a non-empty event stack
 
     VocalWaveSetup vocal;
     MusicWaveSetup music;
@@ -118,10 +114,10 @@ protected:
     void applyEvent_NoteLyrics (const qtauEvent_NoteText     &event);
     void applyEvent_NoteEffects(const qtauEvent_NoteEffect   &event);
 
-    bool processEvent(qtauEvent *);
-    void stackChanged();
+    bool processEvent(qtauEvent *) override;
+    void stackChanged()            override;
 
-    qtauSessionPlayback::EState playSt;
+    EAudioPlayback playSt = EAudioPlayback::noAudio;
 };
 
 #endif // SESSION_H

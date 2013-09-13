@@ -17,7 +17,7 @@ public:
     ~qtauMeterBar();
 
     void setOffset(int off);
-    void configure(const noteSetup &newSetup);
+    void configure(const SNoteSetup &newSetup);
 
 signals:
     void scrolled(int delta);
@@ -36,11 +36,11 @@ protected:
     void mouseReleaseEvent    (QMouseEvent  *event);
     void wheelEvent           (QWheelEvent  *event);
 
-    int offset;
-    noteSetup ns;
+    int offset = 0;
+    SNoteSetup ns;
 
-    QPixmap *bgCache;
-    QPixmap *labelCache;
+    QPixmap *bgCache    = nullptr;
+    QPixmap *labelCache = nullptr;
 
     void updateCache();
 

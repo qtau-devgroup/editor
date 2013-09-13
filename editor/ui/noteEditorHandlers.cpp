@@ -344,8 +344,7 @@ qne::editorNote* qtauEdController::noteInPoint(const QPoint &p)
 
 //========================================================================
 
-qtauEd_TextInput::qtauEd_TextInput(
-    qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
+qtauEd_TextInput::qtauEd_TextInput(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
     qtauEdController(ne, ns, nts, st), managedOnEdited(false), editingNote(false) {}
 
 qtauEd_TextInput::qtauEd_TextInput(qtauEdController *c) : qtauEdController(c) {}
@@ -516,8 +515,7 @@ bool qtauEd_TextInput::eventFilter(QObject */*obj*/, QEvent *event)
 
 //========================================================================
 
-qtauEd_SelectRect::qtauEd_SelectRect(
-        qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
+qtauEd_SelectRect::qtauEd_SelectRect(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
         qtauEdController(ne, ns, nts, st) {}
 
 qtauEd_SelectRect::qtauEd_SelectRect(qtauEdController *c) : qtauEdController(c) {}
@@ -601,8 +599,7 @@ void qtauEd_SelectRect::mouseReleaseEvent(QMouseEvent*)
 
 //========================================================================
 
-qtauEd_DragNotes::qtauEd_DragNotes(
-        qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
+qtauEd_DragNotes::qtauEd_DragNotes(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
         qtauEdController(ne, ns, nts, st) {}
 
 qtauEd_DragNotes::qtauEd_DragNotes(qtauEdController *c) : qtauEdController(c) {}
@@ -794,8 +791,7 @@ void qtauEd_DragNotes::mouseReleaseEvent(QMouseEvent*)
 
 //========================================================================
 
-qtauEd_ResizeNote::qtauEd_ResizeNote(
-        qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st, bool left) :
+qtauEd_ResizeNote::qtauEd_ResizeNote(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st, bool left) :
     qtauEdController(ne, ns, nts, st), toLeft(left) {}
 
 qtauEd_ResizeNote::qtauEd_ResizeNote(qtauEdController *c, bool left) : qtauEdController(c), toLeft(left) {}
@@ -931,8 +927,7 @@ void qtauEd_ResizeNote::mouseReleaseEvent(QMouseEvent*)
 
 //========================================================================
 
-qtauEd_AddNote::qtauEd_AddNote(
-        qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
+qtauEd_AddNote::qtauEd_AddNote(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
         qtauEdController(ne, ns, nts, st) {}
 
 qtauEd_AddNote::qtauEd_AddNote(qtauEdController *c) : qtauEdController(c) {}

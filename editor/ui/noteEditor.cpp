@@ -12,14 +12,14 @@
 
 #include <QLineEdit>
 
-const int CONST_CACHE_DEFNUM_LABELS = 1000;
-const int CONST_CACHE_LINE_HEIGHT   = 12;
-const int CONST_CACHE_LINE_WIDTH    = 100;
-const int CONST_LABEL_DRAW_MINWIDTH = 20; // minimal note width on screen in pixels to draw phoneme in it
+const int cdef_cache_labels_num  = 1000;
+const int cdef_cache_line_height = 12;
+const int cdef_cache_line_width  = 100;
+const int cdef_lbl_draw_minwidth = 20; // minimal note width on screen in pixels to draw phoneme in it
 
-const int CONST_SCROLL_MARGIN       = 20; // px of space between edge of widget and target rect
+const int cdef_scroll_margin     = 20; // px of space between edge of widget and target rect
 
-const double F_ROUNDER = 0.001f; // because float is floor'ed to int by default, so 3.9999999 becomes 3
+const double F_ROUNDER = 0.1; // because float is floor'ed to int by default, so 3.9999999 becomes 3
 
 //QTime t;
 
@@ -34,7 +34,7 @@ qtauNoteEditor::qtauNoteEditor(QWidget *parent) :
     setMouseTracking(true);
     setFocusPolicy(Qt::StrongFocus);
 
-    labelCache = new QPixmap(CONST_CACHE_LINE_WIDTH, CONST_CACHE_LINE_HEIGHT * CONST_CACHE_DEFNUM_LABELS);
+    labelCache = new QPixmap(cdef_cache_line_width, cdef_cache_line_height * cdef_cache_labels_num);
     labelCache->fill(Qt::transparent);
 
     ctrl = new qtauEdController(*this, setup, notes, state);
@@ -57,7 +57,7 @@ qtauNoteEditor::~qtauNoteEditor()
         delete ctrl;
 }
 
-void qtauNoteEditor::configure(const noteSetup &newSetup)
+void qtauNoteEditor::configure(const SNoteSetup &newSetup)
 {
     ctrl->reset();
     bool gridChanged = newSetup.note != setup.note || newSetup.notesInBar != setup.notesInBar;
@@ -87,24 +87,6 @@ void qtauNoteEditor::onEvent(qtauEvent *e)
 
 void qtauNoteEditor::lazyUpdate()
 {
-//    if (!updateCalled)
-//    {
-//        int now = t.elapsed();
-
-//        if (now - lastUpdate < 15)
-//        {
-//            delayingUpdate = true;
-//            QTimer::singleShot(10, this, SLOT(lazyUpdate()));
-//        }
-//        else
-//        {
-//            delayingUpdate = false;
-//            updateCalled = true;
-//            update();
-//        }
-//    }
-    /* delayed update desynchronizes drawing of piano/meter and note editor...
-        Either to delay drawing of all custom widgets, or just stop being lazy here. */
     update();
 }
 
@@ -117,7 +99,7 @@ void qtauNoteEditor::recalcNoteRects()
     setup.barWidth  = setup.note.width() * setup.notesInBar;
     setup.octHeight = setup.note.height() * 12;
 
-    double pulsesToPixels = (double)setup.note.width() / MIDI_PPQ;
+    double pulsesToPixels = (double)setup.note.width() / c_midi_ppq;
     int startBar = 0, endBar = 0;
 
     foreach (quint64 key, notes.idMap.keys())
@@ -235,7 +217,7 @@ void qtauNoteEditor::updateBGCache()
     if (!blacks.isEmpty())
     {
         brush.setStyle(Qt::Dense6Pattern);
-        brush.setColor(DEFCOLOR_BLACK_NOTELINE_BG);
+        brush.setColor(cdef_color_black_noteline_bg);
         p.setBrush(brush);
 
         p.drawPath(blacks);
@@ -246,13 +228,13 @@ void qtauNoteEditor::updateBGCache()
     // lines ------------------
     if (!innerLines.isEmpty())
     {
-        p.setPen(QColor(DEFCOLOR_INNER_LINE));
+        p.setPen(QColor(cdef_color_inner_line));
         p.drawPath(innerLines);
     }
 
     if (!outerLines.isEmpty())
     {
-        p.setPen(QColor(DEFCOLOR_OUTER_LINE));
+        p.setPen(QColor(cdef_color_outer_line));
         p.drawPath(outerLines);
     }
 }
@@ -282,15 +264,15 @@ QPoint qtauNoteEditor::scrollTo(const QRect &r)
     QPoint result = state.viewport.topLeft();
 
     if (r.x() < state.viewport.x())
-        result.setX(r.x() - CONST_SCROLL_MARGIN);
+        result.setX(r.x() - cdef_scroll_margin);
     else
-        if (r.x() > state.viewport.x() + geometry().width() - CONST_CACHE_LINE_WIDTH - CONST_SCROLL_MARGIN)
+        if (r.x() > state.viewport.x() + geometry().width() - cdef_cache_line_width - cdef_scroll_margin)
             result.setX(r.x() - geometry().width() / 2);
 
     if (r.y() < state.viewport.y())
-        result.setY(r.y() - CONST_SCROLL_MARGIN);
+        result.setY(r.y() - cdef_scroll_margin);
     else
-        if (r.y() > state.viewport.y() + geometry().height() - CONST_SCROLL_MARGIN)
+        if (r.y() > state.viewport.y() + geometry().height() - cdef_scroll_margin)
             result.setY(r.y() - geometry().height() / 2);
 
     if (result != state.viewport.topLeft())
@@ -357,10 +339,10 @@ void qtauNoteEditor::paintEvent(QPaintEvent *event)
                     if (n.selected) selNoteRects.addRect(n.r);
                     else            noteRects   .addRect(n.r);
 
-                    if (n.r.width() > CONST_LABEL_DRAW_MINWIDTH) // don't draw labels for too narrow rects
+                    if (n.r.width() > cdef_lbl_draw_minwidth) // don't draw labels for too narrow rects
                     {
-                        QRectF fR(0, n.id * CONST_CACHE_LINE_HEIGHT,
-                                  CONST_CACHE_LINE_WIDTH, CONST_CACHE_LINE_HEIGHT);
+                        QRectF fR(0, n.id * cdef_cache_line_height,
+                                  cdef_cache_line_width, cdef_cache_line_height);
 
                         if (!n.cached)
                         {
@@ -383,12 +365,12 @@ void qtauNoteEditor::paintEvent(QPaintEvent *event)
 
         if (hasVisibleNotes)
         {
-            p.setPen  (QColor(DEFCOLOR_NOTE_BORDER));
-            p.setBrush(QColor(DEFCOLOR_NOTE_BG));
+            p.setPen  (QColor(cdef_color_note_border));
+            p.setBrush(QColor(cdef_color_note_bg));
 
             p.drawPath(noteRects);
-            p.setBrush(QColor(DEFCOLOR_NOTE_SEL_BG));
-            p.setPen(QColor(DEFCOLOR_NOTE_SEL));
+            p.setBrush(QColor(cdef_color_note_sel_bg));
+            p.setPen(QColor(cdef_color_note_sel));
             p.drawPath(selNoteRects);
 
             p.drawPixmapFragments(cachedLabels.data(), cachedLabels.size(), *labelCache);
@@ -409,7 +391,7 @@ void qtauNoteEditor::paintEvent(QPaintEvent *event)
     {
         QPen pen = p.pen();
         pen.setWidth(1);
-        pen.setColor(QColor(DEFCOLOR_SNAP_LINE));
+        pen.setColor(QColor(cdef_color_snap_line));
         p.setPen(pen);
         p.drawLine(state.snapLine, vSt, state.snapLine, vSt + state.viewport.height());
     }

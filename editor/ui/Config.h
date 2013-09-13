@@ -11,34 +11,34 @@
 
 
 // default config for custom ui widgets
-const unsigned int DEFCOLOR_BLACK_KEY_BG      = 0xff666666;
-const unsigned int DEFCOLOR_BLACK_NOTELINE_BG = 0xffb8b8b8; // aarrggbb
-const unsigned int DEFCOLOR_INNER_LINE        = 0xffbcbcbc;
-const unsigned int DEFCOLOR_OUTER_LINE        = 0xff0095c6;
+const unsigned int cdef_color_black_key_bg      = 0xff666666;
+const unsigned int cdef_color_black_noteline_bg = 0xffb8b8b8; // aarrggbb
+const unsigned int cdef_color_inner_line        = 0xffbcbcbc;
+const unsigned int cdef_color_outer_line        = 0xff0095c6;
 
-const unsigned int DEFCOLOR_NOTE_BORDER       = 0xff000000;
-const unsigned int DEFCOLOR_NOTE_BG           = 0xffffffff;
-const unsigned int DEFCOLOR_NOTE_SEL          = 0xff0095c6;
-const unsigned int DEFCOLOR_NOTE_SEL_BG       = 0xffe3eeff;
+const unsigned int cdef_color_note_border       = 0xff000000;
+const unsigned int cdef_color_note_bg           = 0xffffffff;
+const unsigned int cdef_color_note_sel          = 0xff0095c6;
+const unsigned int cdef_color_note_sel_bg       = 0xffe3eeff;
 
-const unsigned int DEFCOLOR_SELRECT           = 0xff00857d;
-const unsigned int DEFCOLOR_SELRECT_BG        = 0x2200857d;
+const unsigned int cdef_color_selrect           = 0xff00857d;
+const unsigned int cdef_color_selrect_bg        = 0x2200857d;
 
-const unsigned int DEFCOLOR_SNAP_LINE         = 0xaa3effab;
+const unsigned int cdef_color_snap_line         = 0xaa3effab;
 
-const unsigned int DEFCOLOR_PIANO_LBL_WH      = 0xff000000; // colors for white and black key lablels
-const unsigned int DEFCOLOR_PIANO_LBL_WH_ON   = 0xff00857d;
-const unsigned int DEFCOLOR_PIANO_LBL_BL      = 0xffffffff;
-const unsigned int DEFCOLOR_PIANO_LBL_BL_ON   = 0xffeafffe;
+const unsigned int cdef_color_piano_lbl_wh      = 0xff000000; // colors for white and black key lablels
+const unsigned int cdef_color_piano_lbl_wh_on   = 0xff00857d;
+const unsigned int cdef_color_piano_lbl_bl      = 0xffffffff;
+const unsigned int cdef_color_piano_lbl_bl_on   = 0xffeafffe;
 
-const unsigned int DEFCOLOR_LOGTAB_ERR        = 0xffff0000;
+const unsigned int cdef_color_logtab_err        = 0xffff0000;
 
-const QString      DEFCOLOR_DYNBTN_OFF        = "#b7b7b7"; // CSS color
-const QString      DEFCOLOR_DYNBTN_BG         = "#77ded8"; // background graph button color
-const QString      DEFCOLOR_DYNBTN_ON         = "#00857d"; // foreground graph button color
-const QString      DEFCOLOR_DYNBTN_ON_BG      = "#eafffe";
+const QString      cdef_color_dynbtn_off        = "#b7b7b7"; // CSS color
+const QString      cdef_color_dynbtn_bg         = "#77ded8"; // background graph button color
+const QString      cdef_color_dynbtn_on         = "#00857d"; // foreground graph button color
+const QString      cdef_color_dynbtn_on_bg      = "#eafffe";
 
-const QPoint CONST_SLIDECLICK_LIMIT = QPoint(3, 3);
+const QPoint c_slideclick_limit = QPoint(3, 3);
 
 
 // editor config

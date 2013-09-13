@@ -11,7 +11,7 @@
 
 
 qtauWaveform::qtauWaveform(QWidget *parent) :
-    QWidget(parent), offset(0), wave(0), bgCache(0), bpm(120), beatWidth(ZOOM_NOTE_WIDTHS[DEFAULT_ZOOM_INDEX])
+    QWidget(parent)
 {
     //float noteDuration = 60.f / bpm; // 0.5 seconds each note, 4 notes (1 bar) in 2 seconds
 }
@@ -131,7 +131,7 @@ void qtauWaveform::updateCache()
             QPainter p(bgCache);
 
             QPen pen(p.pen());
-            pen.setColor(QColor(DEFCOLOR_INNER_LINE));
+            pen.setColor(QColor(cdef_color_inner_line));
             pen.setWidth(1);
             p.setPen(pen);
 

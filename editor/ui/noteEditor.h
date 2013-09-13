@@ -29,7 +29,7 @@ public:
     qtauNoteEditor(QWidget *parent = 0);
     ~qtauNoteEditor();
 
-    void configure(const noteSetup &newSetup);
+    void configure(const SNoteSetup &newSetup);
     void deleteSelected();
 
     void   setVOffset(int voff);
@@ -76,7 +76,7 @@ protected:
     void mouseReleaseEvent    (QMouseEvent  *event);
     void wheelEvent           (QWheelEvent  *event);
 
-    noteSetup        setup;
+    SNoteSetup       setup;
     qne::editorState state;
     qne::editorNotes notes;
 

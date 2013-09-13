@@ -26,7 +26,7 @@ void qtauDynLabel::setState(EState s)      { _state = s; }
 
 
 qtauDynDrawer::qtauDynDrawer(QWidget *parent) :
-    QWidget(parent), offset(0), bgCache(0)
+    QWidget(parent)
 {
     //
 }
@@ -45,7 +45,7 @@ void qtauDynDrawer::setOffset(int off)
     }
 }
 
-void qtauDynDrawer::configure(const noteSetup &newSetup)
+void qtauDynDrawer::configure(const SNoteSetup &newSetup)
 {
     ns = newSetup;
     updateCache();
@@ -163,9 +163,9 @@ void qtauDynDrawer::updateCache()
     bgCache->fill(Qt::white);
     QPainter p(bgCache);
 
-    p.setPen(QColor(DEFCOLOR_INNER_LINE));
+    p.setPen(QColor(cdef_color_inner_line));
     p.drawLines(noteLines);
 
-    p.setPen(QColor(DEFCOLOR_OUTER_LINE));
+    p.setPen(QColor(cdef_color_outer_line));
     p.drawLines(barLines);
 }

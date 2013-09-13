@@ -18,7 +18,7 @@ public:
     ~qtauPiano();
 
     void setOffset(int voff);
-    void configure(const noteSetup &newSetup);
+    void configure(const SNoteSetup &newSetup);
 
 signals:
     void keyPressed (int keyNum);
@@ -158,9 +158,9 @@ public:
 
 protected:
     QVector<octave> octaves;
-    key *pressedKey;
-    key *hoveredKey;
-    noteSetup ns;
+    key *pressedKey = nullptr;
+    key *hoveredKey = nullptr;
+    SNoteSetup ns;
 
 };
 

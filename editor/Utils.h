@@ -12,40 +12,61 @@
 #include <QtWidgets/QWidget>
 
 
-const QString QTAU_VERSION = QString::fromUtf8("α1");
+const QString c_qtau_name = QStringLiteral("QTau");
+const QString c_qtau_ver  = QStringLiteral("α1");
 
 /* Pulses Per Quarter note - standard timing resolution of a MIDI sequencer,
      needs to be divisible by 16 and 3 to support 1/64 notes and triplets.
      Used to determine note offset (in bars/seconds) and duration */
-const int MIDI_PPQ = 480;
+const int c_midi_ppq       = 480;
+const int c_zoom_num       = 17;
+const int cdef_zoom_index  = 4;
+const int cdef_note_height = 14;
 
-const int CONST_ZOOMS = 17;
-const int DEFAULT_ZOOM_INDEX = 4;
-const int ZOOM_NOTE_WIDTHS[CONST_ZOOMS] = {16,  32,  48,  64,  80,
-                                           96,  112, 128, 144, 160,
-                                           176, 208, 240, 304, 368, 480, 608};
+const int c_zoom_note_widths[c_zoom_num] = {16,  32,  48,  64,  80,
+                                            96,  112, 128, 144, 160,
+                                            176, 208, 240, 304, 368, 480, 608};
 
-typedef struct _ns {
-    QSize note;     // gui dimensions (in pixels)
+struct SNoteSetup {
+    QSize note        {c_zoom_note_widths[cdef_zoom_index], cdef_note_height}; // gui dimensions (in pixels)
 
-    int baseOctave;
-    int numOctaves;
+    int baseOctave  = 1;
+    int numOctaves  = 7;
 
-    int noteLength; // denominator of note length 1
-    int notesInBar; // noteLength=4 and notesInBar=4 means music time signature 4/4
-    int tempo;      // bpm
-    int quantize;   // 1/x note length, used as unit of offset for singing notes
-    int length;     // 1/x singing note length unit (len=4 means 1/4, 2/4 etc +1/4)
+    int noteLength  = 4;    // denominator of note length 1
+    int notesInBar  = 4;    // noteLength=4 and notesInBar=4 means music time signature 4/4
+    int tempo       = 120;  // bpm
+    int quantize    = 32;   // 1/x note length, used as unit of offset for singing notes
+    int length      = 32;   // 1/x singing note length unit (len=4 means 1/4, 2/4 etc +1/4)
 
-    int barWidth;   // derived
-    int octHeight;  // derived
-
-    _ns() : note(ZOOM_NOTE_WIDTHS[DEFAULT_ZOOM_INDEX], 14), baseOctave(1), numOctaves(7),
-        noteLength(4), notesInBar(4), tempo(120), quantize(32), length(32),
-        barWidth(note.width()*notesInBar), octHeight(note.height()*12)
-    {}
-} noteSetup;
+    int barWidth    = c_zoom_note_widths[cdef_zoom_index] * 4;
+    int octHeight   = cdef_note_height * 12;
+};
 //----------------------------------------------------
+
+enum class EPlayer : char {
+    stopped,
+    playing,
+    paused,
+    repeating
+};
+
+enum class EAudioPlayback : char {
+    noAudio,
+    needsSynth,
+    playing,
+    paused,
+    stopped,
+    repeating
+};
+
+enum class ELog : char {
+    none,
+    info,
+    debug,
+    error,
+    success
+};
 
 
 class vsLog : public QObject
@@ -53,57 +74,35 @@ class vsLog : public QObject
     Q_OBJECT
 
 public:
-    inline vsLog() : lastTime("none"), saving(true) {}
-    ~vsLog();
-
     static vsLog* instance();
 
-    typedef enum
-    {
-        info = 0,
-        debug,
-        error,
-        success,
-        none
-    } msgType;
-
-    static void i(const QString &msg); /// info
-    static void d(const QString &msg); /// debug
-    static void e(const QString &msg); /// error
-    static void s(const QString &msg); /// success
-    static void n();                   /// separator (empty line)
-    static void r();                   /// reemit stored message (removing it from history)
+    static void i(const QString &msg) { instance()->addMessage(msg, ELog::info);    }
+    static void d(const QString &msg) { instance()->addMessage(msg, ELog::debug);   }
+    static void e(const QString &msg) { instance()->addMessage(msg, ELog::error);   }
+    static void s(const QString &msg) { instance()->addMessage(msg, ELog::success); }
+    static void n()                   { instance()->addMessage("",  ELog::none);    }
+    static void r(); // reemit stored message (removing it from history)
 
     void enableHistory(bool enable) { saving = enable; }
 
 public slots:
-    void addMessage(QString, vsLog::msgType);
+    void addMessage(const QString&, ELog);
 
 signals:
-    void message(QString, int);  // int is msg type from enum "vsLog::msgType"
+    void message(QString, ELog);  // int is msg type from enum "vsLog::msgType"
 
 protected:
-    QString lastTime;
-    bool    saving;
+    QString lastTime = QStringLiteral(u"none");
+    bool    saving   = true;
 
     QList<QString> history;
-    void reemit(const QString &msg, vsLog::msgType type);
+    void reemit(const QString &msg, ELog type);
 
 };
 
 
 int snap(int value, int unit, int baseValue = 0);  /// baseValue % unit is added to result
 
-namespace qtauSessionPlayback {
-    typedef enum State {
-        NothingToPlay = 0,
-        NeedsSynthesis,
-        Playing,
-        Paused,
-        Stopped,
-        Repeating
-    } EState;
-}
 
 // conversion table of pianoroll keyboard key code (C1-B7) to fundamental frequency
 //float *semitoneToFrequency[] = { 0, // skip index 0 since note numbers start from 1
@@ -115,9 +114,9 @@ namespace qtauSessionPlayback {
 //    1046.5, 1108.7, 1174.7, 1244.5, 1318.5, 1396.9, 1480.0, 1568.0, 1661.2, 1760.0, 1864.7, 1975.5,  // 6th
 //    2093.0, 2217.5, 2349.3, 2489.0, 2637.0, 2793.8, 2960.0, 3136.0, 3322.4, 3520.0, 3729.3, 3951.1}; // 7th
 
-typedef union {
+union uichar {
     char    c[4];
     quint32 i;
-} uichar;
+};
 
 #endif // UTILS_H

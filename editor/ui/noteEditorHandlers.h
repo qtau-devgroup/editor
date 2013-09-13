@@ -26,7 +26,7 @@ class qtauEdController : public QObject
     friend class qtauNoteEditor;
 
 public:
-    qtauEdController(qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
+    qtauEdController(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st) :
         owner(&ne), setup(&ns), notes(&nts), state(&st), edit(0), pointedNote(0), absFirstClickPos(-1,-1),
         rmbDragging(false), idOffset(0) {}
 
@@ -42,7 +42,7 @@ public:
 
 protected:
     qtauNoteEditor   *owner;
-    noteSetup        *setup;
+    SNoteSetup       *setup;
     qne::editorNotes *notes;
     qne::editorState *state;
 
@@ -135,7 +135,7 @@ class qtauEd_TextInput : public qtauEdController
     Q_OBJECT
 
 public:
-    qtauEd_TextInput(qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st);
+    qtauEd_TextInput(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st);
     qtauEd_TextInput(qtauEdController *c);
     ~qtauEd_TextInput();
 
@@ -162,7 +162,7 @@ class qtauEd_SelectRect : public qtauEdController
     Q_OBJECT
 
 public:
-    qtauEd_SelectRect(qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st);
+    qtauEd_SelectRect(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st);
     qtauEd_SelectRect(qtauEdController *c);
     ~qtauEd_SelectRect();
 
@@ -184,7 +184,7 @@ class qtauEd_DragNotes : public qtauEdController
     Q_OBJECT
 
 public:
-    qtauEd_DragNotes(qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st);
+    qtauEd_DragNotes(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st);
     qtauEd_DragNotes(qtauEdController *c);
     ~qtauEd_DragNotes();
 
@@ -211,7 +211,7 @@ class qtauEd_ResizeNote : public qtauEdController
     Q_OBJECT
 
 public:
-    qtauEd_ResizeNote(qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st, bool left);
+    qtauEd_ResizeNote(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st, bool left);
     qtauEd_ResizeNote(qtauEdController *c, bool left);
     ~qtauEd_ResizeNote();
 
@@ -238,7 +238,7 @@ class qtauEd_AddNote : public qtauEdController
     Q_OBJECT
 
 public:
-    qtauEd_AddNote(qtauNoteEditor &ne, noteSetup &ns, qne::editorNotes &nts, qne::editorState &st);
+    qtauEd_AddNote(qtauNoteEditor &ne, SNoteSetup &ns, qne::editorNotes &nts, qne::editorState &st);
     qtauEd_AddNote(qtauEdController *c);
     ~qtauEd_AddNote();
 

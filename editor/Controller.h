@@ -6,6 +6,7 @@
 #include <QObject>
 #include <QMap>
 #include <QDir>
+#include <QThread>
 
 class MainWindow;
 class qtauSynth;
@@ -19,6 +20,7 @@ class ISynth;
 class qtauController : public QObject
 {
     Q_OBJECT
+    QThread audioThread;
 
 public:
     explicit qtauController(QObject *parent = 0);
@@ -57,11 +59,11 @@ public slots:
     void pianoKeyReleased(int);
 
 protected:
-    qtmmPlayer *player;
-    MainWindow *mw;
+    qtmmPlayer *player = nullptr;
+    MainWindow *mw     = nullptr;
 
     QMap<QString, qtauSession*> sessions;
-    qtauSession *activeSession;
+    qtauSession *activeSession = nullptr;
 
     typedef enum {
         Playing = 0,

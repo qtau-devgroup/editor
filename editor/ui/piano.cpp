@@ -45,12 +45,12 @@ inline void cacheLbl(QPainter &p, QRect &r, const QString &txt, int &vOff, const
 
 inline void whiteLbl(QPainter &p, QRect &r, const QString &txt, int &vOff)
 {
-    cacheLbl(p, r, txt, vOff, QColor(DEFCOLOR_PIANO_LBL_WH), QColor(DEFCOLOR_PIANO_LBL_WH_ON));
+    cacheLbl(p, r, txt, vOff, QColor(cdef_color_piano_lbl_wh), QColor(cdef_color_piano_lbl_wh_on));
 }
 
 inline void blackLbl(QPainter &p, QRect &r, const QString &txt, int &vOff)
 {
-    cacheLbl(p, r, txt, vOff, QColor(DEFCOLOR_PIANO_LBL_BL), QColor(DEFCOLOR_PIANO_LBL_BL_ON));
+    cacheLbl(p, r, txt, vOff, QColor(cdef_color_piano_lbl_bl), QColor(cdef_color_piano_lbl_bl_on));
 }
 //----------------------------------------------------------------
 
@@ -125,7 +125,7 @@ void qtauPiano::setOffset(int voff)
     }
 }
 
-void qtauPiano::configure(const noteSetup &newSetup)
+void qtauPiano::configure(const SNoteSetup &newSetup)
 {
     ns = newSetup;
     initPiano(ns.baseOctave, ns.numOctaves);
@@ -210,7 +210,7 @@ void qtauPiano::paintEvent(QPaintEvent *event)
 
         if (!blacks.isEmpty())
         {
-            p.setBrush(QColor(DEFCOLOR_BLACK_KEY_BG));
+            p.setBrush(QColor(cdef_color_black_key_bg));
             p.drawRects(blacks);
         }
 

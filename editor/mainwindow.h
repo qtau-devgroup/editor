@@ -42,27 +42,19 @@ public:
 
     bool setController(qtauController &c, qtauSession &s);
 
-    typedef enum {
-        Stopped = 0,
-        Playing,
-        Paused,
-        Repeat
-    } EPlayState;
-
 private:
     Ui::MainWindow *ui;
 
 signals:
-    void loadUST(QString fileName);
-    void saveUST(QString fileName, bool rewrite);
+    void loadUST  (QString fileName);
+    void saveUST  (QString fileName, bool rewrite);
     void saveAudio(QString fileName, bool rewrite);
 
     void loadAudio(QString fileName);
     void setVolume(int);
 
 public slots:
-    void onQuit();
-    void onLog(const QString&, int);
+    void onLog(const QString&, ELog);
     void onOpenUST();
     void onSaveUST();
     void onSaveUSTAs();
@@ -78,10 +70,10 @@ public slots:
     void onEditorRMBScrolled(QPoint, QPoint);
     void onEditorRequestOffset(QPoint);
 
-    void onPianoHeightChanged(int newHeight);
+    void onPianoHeightChanged    (int newHeight);
     void onNoteEditorWidthChanged(int newWidth);
 
-    void onPlaybackState(qtauSessionPlayback::State state);
+    void onPlaybackState(EAudioPlayback);
     void onMute(bool m);
 
     void onUndo();
@@ -109,53 +101,51 @@ public slots:
     void onSaveAudioAs();
 
 protected:
-    qtauSession    *doc;
-    noteSetup       ns;
-    QTabWidget     *tabs;
+    qtauSession    *doc             = nullptr;
+    SNoteSetup      ns;
+    QTabWidget     *tabs            = nullptr;
 
-    qtauPiano      *piano;
-    qtauNoteEditor *noteEditor;
-    qtauDynDrawer  *drawZone;
-    qtauMeterBar   *meter;
+    qtauPiano      *piano           = nullptr;
+    qtauNoteEditor *noteEditor      = nullptr;
+    qtauDynDrawer  *drawZone        = nullptr;
+    qtauMeterBar   *meter           = nullptr;
 
-    qtauWaveform   *vocalWave;
-    qtauWaveform   *musicWave;
+    qtauWaveform   *vocalWave       = nullptr;
+    qtauWaveform   *musicWave       = nullptr;
 
-    QWidget        *vocalWavePanel; // used to switch its visibility, hidden by default
-    QWidget        *musicWavePanel;
-    QWidget        *drawZonePanel;
+    QWidget        *vocalWavePanel  = nullptr; // used to switch its visibility, hidden by default
+    QWidget        *musicWavePanel  = nullptr;
+    QWidget        *drawZonePanel   = nullptr;
 
-    qtauDynLabel   *fgDynLbl, *bgDynLbl;
+    qtauDynLabel   *fgDynLbl        = nullptr;
+    qtauDynLabel   *bgDynLbl        = nullptr;
 
-    QScrollBar     *hscr;
-    QScrollBar     *vscr;
-    QSlider        *zoom;
-    QSlider        *volume;
-    QAction        *muteBtn;
+    QScrollBar     *hscr            = nullptr;
+    QScrollBar     *vscr            = nullptr;
+    QSlider        *zoom            = nullptr;
+    QSlider        *volume          = nullptr;
+    QAction        *muteBtn         = nullptr;
 
-    QTextEdit      *logpad;
-
-    EPlayState      playState;
+    QTextEdit      *logpad          = nullptr;
 
     QList<QToolBar*> toolbars;
     void enableToolbars(bool enable = true);
 
+    EPlayer playState;
+
     QColor  logTabTextColor;
-    int     logNewMessages;
-    bool    logHasErrors;
-    bool    showNewLogNumber;
+    int     logNewMessages   = 0;
+    bool    logHasErrors     = false;
+    bool    showNewLogNumber = true;
 
     QString docName;
-
-    void dragEnterEvent(QDragEnterEvent *);
-    void dragMoveEvent(QDragMoveEvent *);
-    void dropEvent(QDropEvent *);
-    void closeEvent(QCloseEvent *event);
-
-    //---------------
-
     QString lastScoreDir;
     QString lastAudioDir;
+
+    void dragEnterEvent (QDragEnterEvent*);
+    void dragMoveEvent  (QDragMoveEvent *);
+    void dropEvent      (QDropEvent     *);
+    void closeEvent     (QCloseEvent    *);
 
 };
 
