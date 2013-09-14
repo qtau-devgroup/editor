@@ -510,7 +510,7 @@ MainWindow::MainWindow(QWidget *parent) :
     if (!settings.value(c_key_dynpanel_on, true).toBool())
     {
         QList<int> panelSizes = editorSplitter->sizes();
-        panelSizes[3] = 0;
+        panelSizes.last() = 0;
         editorSplitter->setSizes(panelSizes);
     }
 
@@ -546,9 +546,7 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue(c_key_show_lognum, showNewLogNumber);
     settings.setValue(c_key_sound,       volume->value());
     settings.setValue(c_key_audio_codec, audioExt);
-
-    QList<int> panelSizes = editorSplitter->sizes();
-    settings.setValue(c_key_dynpanel_on, panelSizes[3] > 0);
+    settings.setValue(c_key_dynpanel_on, editorSplitter->sizes().last() > 0);
 
     event->accept();
 }

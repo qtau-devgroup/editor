@@ -18,6 +18,18 @@ qtmmPlayer::qtmmPlayer()
     foreach (QAudioDeviceInfo i, advs)
         vsLog::d(QString("%1 %2").arg(i.deviceName()).arg(i.supportedCodecs().join(' ')));
 
+    open(QIODevice::ReadOnly);
+}
+
+qtmmPlayer::~qtmmPlayer()
+{
+    close();
+    delete audioOutput;
+    delete mixer;
+}
+
+void qtmmPlayer::threadedInit()
+{
     mixer = new qtauSoundMixer();
 
     QAudioDeviceInfo info(QAudioDeviceInfo::defaultOutputDevice());
@@ -33,15 +45,6 @@ qtmmPlayer::qtmmPlayer()
         connect(audioOutput, SIGNAL(notify()), SLOT(onTick()));
     }
     else vsLog::e("Default audio format not supported by QtMultimedia backend, cannot play audio.");
-
-    open(QIODevice::ReadOnly);
-}
-
-qtmmPlayer::~qtmmPlayer()
-{
-    close();
-    delete audioOutput;
-    delete mixer;
 }
 
 void qtmmPlayer::addEffect(qtauAudioSource *e, bool replace, bool smoothly)

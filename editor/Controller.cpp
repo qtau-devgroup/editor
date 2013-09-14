@@ -29,6 +29,8 @@ qtauController::qtauController(QObject *parent) :
     player = new qtmmPlayer();
     player->moveToThread(&audioThread);
 
+    connect(&audioThread, &QThread::started, player, &qtmmPlayer::threadedInit);
+
     connect(this, &qtauController::setEffect,  player, &qtmmPlayer::addEffect);
     connect(this, &qtauController::setTrack,   player, &qtmmPlayer::addTrack);
     connect(this, &qtauController::playStart,  player, &qtmmPlayer::play);

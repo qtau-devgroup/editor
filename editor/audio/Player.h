@@ -38,6 +38,8 @@ public slots: // all slots should be called indirectly with connect + emit becau
 
     void setVolume(int level); // 0..100
 
+    void threadedInit(); // should be called after instance is moved to a separate thread
+
 private slots:
     void onQtmmStateChanged(QAudio::State);
     void onTick();

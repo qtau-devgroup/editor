@@ -83,8 +83,6 @@ void qtauSoundMixer::addEffect(qtauAudioSource *e, bool replace, bool smoothly)
 }
 
 
-const qint16 CONST_SHORT_MAX = 32767;
-
 inline qint64 mixU8(const QByteArray &src, QByteArray &dst, bool stereo, qint64 n)
 {
     qint64 nBytes = stereo ? (2 * n) : n;
@@ -92,19 +90,23 @@ inline qint64 mixU8(const QByteArray &src, QByteArray &dst, bool stereo, qint64 
     n = stereo ? (max / 2) : max;
 
     const char *inData  = src.data();
-    char *outData = dst.data();
+    char       *outData = dst.data();
     quint8 *srcS;
     qint16 *dstS;
-    qint64 fSinc = 1;
-    qint64 dSinc = stereo ? 2 : 4; // if not stereo, skip odd samples in dst
+    int iS, iD;
 
-    for (qint64 fS = 0, fD = 0; fS < max; fS += fSinc, fD += dSinc)
+    qint64 bSinc = 1;
+    qint64 bDinc = stereo ? 2 : 4; // if not stereo, skip odd samples in dst
+
+    for (qint64 bS = 0, bD = 0; bS < max; bS += bSinc, bD += bDinc)
     {
-        srcS = (quint8*)&inData[fS];
-        dstS = (qint16*)&outData[fD];
+        srcS = (quint8*)(inData  + bS);
+        dstS = (qint16*)(outData + bD);
+        iS = ((float)*srcS - 128.0) / 127.0 * 32767.0;
+        iD = *dstS;
 
-        *dstS += ((float)*srcS - 128.0) / 127.0 * 32767.0;
-        *dstS = qMin(*dstS, CONST_SHORT_MAX);
+        iD = M_SQRT1_2 * (iS + iD);
+        *dstS = qMax(qMin(iD, SHRT_MAX), SHRT_MIN);
     }
 
     return n;
@@ -117,19 +119,23 @@ inline qint64 mixS16(const QByteArray &src, QByteArray &dst, bool stereo, qint64
     n = stereo ? (max / 4) : (max / 2);
 
     const char *inData  = src.data();
-    char *outData = dst.data();
+    char       *outData = dst.data();
     qint16 *srcS;
     qint16 *dstS;
-    qint64 fSinc = 2;
-    qint64 dSinc = stereo ? 2 : 4; // if not stereo, skip odd samples in dst
+    int iS, iD;
 
-    for (qint64 fS = 0, fD = 0; fS < max; fS += fSinc, fD += dSinc)
+    qint64  bSinc = 2;
+    qint64  bDinc = stereo ? 2 : 4; // if not stereo, skip odd samples in dst
+
+    for (qint64 bS = 0, bD = 0; bS < max; bS += bSinc, bD += bDinc)
     {
-        srcS = (qint16*)&inData[fS];
-        dstS = (qint16*)&outData[fD];
+        srcS = (qint16*)(inData  + bS);
+        dstS = (qint16*)(outData + bD);
+        iS = *srcS;
+        iD = *dstS;
 
-        *dstS += *srcS;
-        *dstS = qMin(*dstS, CONST_SHORT_MAX);
+        iD = M_SQRT1_2 * (iS + iD);
+        *dstS = qMax(qMin(iD, SHRT_MAX), SHRT_MIN);
     }
 
     return n;
@@ -142,19 +148,23 @@ inline qint64 mixF32(const QByteArray &src, QByteArray &dst, bool stereo, qint64
     n = stereo ? (max / 8) : (max / 4);
 
     const char *inData  = src.data();
-    char *outData = dst.data();
+    char       *outData = dst.data();
     float  *srcS;
     qint16 *dstS;
-    qint64 fSinc = 4;
-    qint64 dSinc = stereo ? 2 : 4; // if not stereo, skip odd samples in dst
+    int iS, iD;
 
-    for (qint64 fS = 0, fD = 0; fS < max; fS += fSinc, fD += dSinc)
+    qint64 bSinc = 4;
+    qint64 bDinc = stereo ? 2 : 4; // if not stereo, skip odd samples in dst
+
+    for (qint64 bS = 0, bD = 0; bS < max; bS += bSinc, bD += bDinc)
     {
-        srcS = (float*)&inData[fS];
-        dstS = (qint16*)&outData[fD];
+        srcS = (float*) (inData  + bS);
+        dstS = (qint16*)(outData + bD);
+        iS = *srcS * 32767.0;
+        iD = *dstS;
 
-        *dstS += *srcS * 32767.0;
-        *dstS = qMin(*dstS, CONST_SHORT_MAX);
+        iD = M_SQRT1_2 * (iS + iD);
+        *dstS = qMax(qMin(iD, SHRT_MAX), SHRT_MIN);
     }
 
     return n;
