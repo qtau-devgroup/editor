@@ -6,6 +6,9 @@
 #include "Utils.h"
 
 #include <QAudioOutput>
+#include <QTimer>
+#include <QDebug>
+
 
 qtmmPlayer::qtmmPlayer()
 {
@@ -30,101 +33,65 @@ qtmmPlayer::qtmmPlayer()
         connect(audioOutput, SIGNAL(notify()), SLOT(onTick()));
     }
     else vsLog::e("Default audio format not supported by QtMultimedia backend, cannot play audio.");
+
+    open(QIODevice::ReadOnly);
 }
 
 qtmmPlayer::~qtmmPlayer()
 {
+    close();
     delete audioOutput;
     delete mixer;
 }
 
-
-void qtmmPlayer::playEffect(const qtauAudioSource &/*e*/, bool /*replace*/, bool /*smoothly*/)
+void qtmmPlayer::addEffect(qtauAudioSource *e, bool replace, bool smoothly)
 {
-    //
+    qtauAudioSource *eCopy = new qtauAudioSource(e->data(), e->getAudioFormat());
+    effects.append(eCopy);
+
+    mixer->addEffect(eCopy, replace, smoothly);
 }
 
-void qtmmPlayer::playTrack (const qtauAudioSource &/*t*/, bool /*replace*/, bool /*smoothly*/)
+void qtmmPlayer::addTrack (qtauAudioSource *t, bool replace, bool smoothly)
 {
-    //
+    qtauAudioSource *tCopy = new qtauAudioSource(t->data(), t->getAudioFormat());
+    tracks.append(tCopy);
+
+    mixer->addTrack(tCopy, replace, smoothly);
+}
+
+qint64 qtmmPlayer::readData(char *data, qint64 maxlen)
+{
+    mixer->reset();
+    qint64 result = mixer->read(data, maxlen);
+
+    if (result < maxlen)
+    {
+        QTimer::singleShot(1, this, SLOT(stop()));
+        memset(data + result, 0, maxlen - result); // silence
+        result = maxlen; // else it'll complain on "buffer underflow"... and will keep asking for more
+    }
+
+    return result;
 }
 
 void qtmmPlayer::play()
 {
-//    bool result = false;
-
-//    if (a != 0)
-//    {
-//        bool needToRemakeDevice = audioOutput && audioOutput->format() != a->getAudioFormat();
-
-//        if (audioOutput)
-//        {
-//            if (audioOutput->state() != QAudio::IdleState ||
-//                audioOutput->state() != QAudio::StoppedState)
-//                stop();
-
-//            if (needToRemakeDevice)
-//            {
-//                delete audioOutput;
-//                audioOutput = 0;
-//            }
-//        }
-
-//        if (a->size() > 0)
-//        {
-//            if (!audioOutput)
-//            {
-
-//            }
-
-//            if (audioOutput)
-//            {
-//                bool opened = a->isOpen();
-
-//                if (!opened)
-//                    opened = a->open(QIODevice::ReadOnly);
-
-//                if (opened)
-//                {
-//                    audioOutput->start(a); // audioOutput::start requires a device, opened for reading
-//                    result = true;
-//                }
-//                else vsLog::e("Could not open audio source device at all. How is this even possible?");
-//            }
-//        }
-//        else vsLog::e("no audio data to play");
-//    }
-//    else
-//        if (audioOutput)
-//        {
-//            if (audioOutput->state() == QAudio::SuspendedState) // continue playing
-//            {
-//                audioOutput->resume();
-//                result = true;
-//            }
-//            else if (audioOutput->state() == QAudio::StoppedState)
-//            {
-//                audioOutput->start();
-//                result = true;
-//            }
-//        }
-
-//    if (!result)
-//        emit playbackEnded();
-
-//    return result;
+    if (audioOutput->state() == QAudio::SuspendedState)
+        audioOutput->resume();
+    else
+        audioOutput->start(this);
 }
 
 void qtmmPlayer::pause()
 {
-    if (audioOutput)
-        audioOutput->suspend();
+    audioOutput->suspend();
 }
 
 void qtmmPlayer::stop()
 {
-    if (audioOutput)
-        audioOutput->stop();
+    audioOutput->stop();
+    mixer->clear();
 }
 
 void qtmmPlayer::setVolume(int level)
@@ -136,46 +103,69 @@ void qtmmPlayer::setVolume(int level)
         audioOutput->setVolume((qreal)level / 100.f);
 }
 
-void qtmmPlayer::onEffectEnded(qtauAudioSource* /*e*/)
+void qtmmPlayer::onEffectEnded(qtauAudioSource* e)
 {
-    //
+    int ind = effects.indexOf(e);
+
+    if (ind != -1)
+    {
+        delete e;
+        effects.removeAt(ind);
+    }
 }
 
-void qtmmPlayer::onTrackEnded(qtauAudioSource* /*t*/)
+void qtmmPlayer::onTrackEnded(qtauAudioSource* t)
 {
-    //
+    int ind = tracks.indexOf(t);
+
+    if (ind != -1)
+    {
+        delete t;
+        tracks.removeAt(ind);
+    }
 }
 
 void qtmmPlayer::onAllEffectsEnded()
 {
-    //
+    if (!effects.isEmpty())
+    {
+        for (auto &e: effects)
+            delete e;
+
+        effects.clear();
+    }
 }
 
 void qtmmPlayer::onAllTracksEnded()
 {
-    //
-}
-
-void qtmmPlayer::onQtmmStateChanged(QAudio::State st)
-{
-    switch (st)
+    if (!tracks.isEmpty())
     {
-    case QAudio::ActiveState:
-    case QAudio::SuspendedState:
-        break;
+        for (auto &t: tracks)
+            delete t;
 
-    case QAudio::StoppedState:
-    case QAudio::IdleState:
-        emit playbackEnded();
-        break;
-
-    default:
-        vsLog::e(QString("Unknown Qtmm Audio state: %1").arg(st));
-        break;
+        tracks.clear();
     }
+
+    emit playbackEnded();
 }
 
-void qtmmPlayer::onTick()
+void qtmmPlayer::onQtmmStateChanged(QAudio::State /*st*/)
 {
-    emit tick(audioOutput->elapsedUSecs());
+//    switch (st)   // doesn't really matter now
+//    {
+//    case QAudio::ActiveState:
+//    case QAudio::SuspendedState:
+//        break;
+
+//    case QAudio::StoppedState:
+//    case QAudio::IdleState:
+//        emit playbackEnded();
+//        break;
+
+//    default:
+//        vsLog::e(QString("Unknown Qtmm Audio state: %1").arg(st));
+//        break;
+//    }
 }
+
+void qtmmPlayer::onTick() { emit tick(audioOutput->processedUSecs()); }

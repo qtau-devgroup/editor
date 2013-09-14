@@ -4,10 +4,22 @@
 #include "ui/noteEditor.h"
 #include "NoteEvents.h"
 
+#include <qevent.h>
 #include <QLineEdit>
 #include <QKeyEvent>
 
 const int CONST_NOTE_RESIZE_CURSOR_MARGIN = 6;
+
+
+inline int snap(int value, int unit, int baseValue = 0)
+{
+    int baseOffset = baseValue % unit;
+    value -= baseOffset;
+    int prev = value / unit;
+    float percent = (float)(value % unit) / (float)unit;
+
+    return ((percent >= 0.5) ? (prev+1) * unit : prev * unit) + baseOffset;
+}
 
 
 void qtauEdController::changeController(qtauEdController *c) { owner->changeController(c); }
@@ -559,8 +571,6 @@ void qtauEd_SelectRect::mouseMoveEvent(QMouseEvent *event)
 
     int stBar  = tl.x() / setup->barWidth;
     int endBar = br.x() / setup->barWidth;
-
-    assert(endBar >= stBar);
 
     // check all notes in bars from first that has left edge of sel rect to last that has right edge
     if (stBar < notes->grid.size())

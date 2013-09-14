@@ -14,6 +14,8 @@ qtauSoundMixer::qtauSoundMixer(QObject *parent) :
     fmt.setSampleRate(44100);
     fmt.setSampleSize(16);
     fmt.setSampleType(QAudioFormat::SignedInt);
+
+    open(QIODevice::ReadOnly);
 }
 
 qtauSoundMixer::qtauSoundMixer(QList<qtauAudioSource*> &tracks, QObject *parent) :
@@ -102,7 +104,7 @@ inline qint64 mixU8(const QByteArray &src, QByteArray &dst, bool stereo, qint64 
         dstS = (qint16*)&outData[fD];
 
         *dstS += ((float)*srcS - 128.0) / 127.0 * 32767.0;
-        *dstS = qMax(*dstS, CONST_SHORT_MAX);
+        *dstS = qMin(*dstS, CONST_SHORT_MAX);
     }
 
     return n;
@@ -127,7 +129,7 @@ inline qint64 mixS16(const QByteArray &src, QByteArray &dst, bool stereo, qint64
         dstS = (qint16*)&outData[fD];
 
         *dstS += *srcS;
-        *dstS = qMax(*dstS, CONST_SHORT_MAX);
+        *dstS = qMin(*dstS, CONST_SHORT_MAX);
     }
 
     return n;
@@ -152,7 +154,7 @@ inline qint64 mixF32(const QByteArray &src, QByteArray &dst, bool stereo, qint64
         dstS = (qint16*)&outData[fD];
 
         *dstS += *srcS * 32767.0;
-        *dstS = qMax(*dstS, CONST_SHORT_MAX);
+        *dstS = qMin(*dstS, CONST_SHORT_MAX);
     }
 
     return n;
@@ -185,6 +187,8 @@ qint64 qtauSoundMixer::readData(char *data, qint64 maxlen)
         if (buf.size() < maxlen)
             buf.resize(maxlen);
 
+        memset(buf.data(), 0, maxlen);
+
         QList<qtauAudioSource*> endedEffects;
         QList<qtauAudioSource*> endedTracks;
 
@@ -192,12 +196,13 @@ qint64 qtauSoundMixer::readData(char *data, qint64 maxlen)
         foreach (qtauAudioSource *e, effects)
         {
             qint64 effFrames = 0;
+            qint64 numCh = (e->getAudioFormat().channelCount() > 1) ? 2 : 1;
 
             switch (e->getAudioFormat().sampleSize())
             {
-            case 8:  effFrames = mixU8 (e->buffer(), buf, e->getAudioFormat().channelCount() > 1, frames); break;
-            case 16: effFrames = mixS16(e->buffer(), buf, e->getAudioFormat().channelCount() > 1, frames); break;
-            case 32: effFrames = mixF32(e->buffer(), buf, e->getAudioFormat().channelCount() > 1, frames); break;
+            case 8:  effFrames = mixU8 (e->read(frames     * numCh), buf, numCh > 1, frames); break;
+            case 16: effFrames = mixS16(e->read(frames * 2 * numCh), buf, numCh > 1, frames); break;
+            case 32: effFrames = mixF32(e->read(frames * 4 * numCh), buf, numCh > 1, frames); break;
             default:
                 vsLog::e("Sound mixer is processing an effect with unsupported sample size, dropping.");
                 endedEffects.append(e);
@@ -212,12 +217,13 @@ qint64 qtauSoundMixer::readData(char *data, qint64 maxlen)
         foreach (qtauAudioSource *t, tracks)
         {
             qint64 trFrames = 0;
+            qint64 numCh = (t->getAudioFormat().channelCount() > 1) ? 2 : 1;
 
             switch (t->getAudioFormat().sampleSize())
             {
-            case 8:  trFrames = mixU8 (t->buffer(), buf, t->getAudioFormat().channelCount() > 1, frames); break;
-            case 16: trFrames = mixS16(t->buffer(), buf, t->getAudioFormat().channelCount() > 1, frames); break;
-            case 32: trFrames = mixF32(t->buffer(), buf, t->getAudioFormat().channelCount() > 1, frames); break;
+            case 8:  trFrames = mixU8 (t->read(frames     * numCh), buf, numCh > 1, frames); break;
+            case 16: trFrames = mixS16(t->read(frames * 2 * numCh), buf, numCh > 1, frames); break;
+            case 32: trFrames = mixF32(t->read(frames * 4 * numCh), buf, numCh > 1, frames); break;
             default:
                 vsLog::e("Sound mixer is processing an effect with unsupported sample size, dropping.");
                 endedTracks.append(t);

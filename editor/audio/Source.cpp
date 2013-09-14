@@ -16,17 +16,16 @@ qtauAudioSource::qtauAudioSource(QObject *parent) :
     //
 }
 
-qtauAudioSource::qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent) :
+qtauAudioSource::qtauAudioSource(const QByteArray& data, const QAudioFormat &f, QObject *parent) :
     QBuffer(parent), fmt(f)
 {
-    if (b.size() > 0)
+    if (!data.isEmpty())
     {
         open(QIODevice::WriteOnly);
-        write(b.data());
+        write(data);
         close();
     }
-    else
-        vsLog::d("Copying audio source with an empty buffer - what was the point of copying then?");
+    else vsLog::d("Copying audio source with an empty buffer - what was the point of copying then?");
 }
 
 qtauAudioSource::qtauAudioSource(const SWavegenSetup &s, QObject *parent) :

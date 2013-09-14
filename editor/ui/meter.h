@@ -4,6 +4,7 @@
 #define METER_H
 
 #include "Utils.h"
+#include <QWidget>
 
 class QPixmap;
 

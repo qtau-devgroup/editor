@@ -6,7 +6,7 @@
 #include <QObject>
 #include <QAudio>
 #include <QThread>
-#include <QDataStream>
+#include <QIODevice>
 
 class QAudioOutput;
 class qtauAudioSource;
@@ -15,7 +15,7 @@ class qtauSoundMixer;
 
 // player is designed to work in a separate thread to avoid audio glitches on playback
 // stores copies of audio sources, uses mixer to combine their data, adds zeros if asked for more data than mixer has
-class qtmmPlayer : public QObject, public QDataStream
+class qtmmPlayer : public QIODevice
 {
     Q_OBJECT
     QThread audioThread;
@@ -29,8 +29,8 @@ signals:
     void tick(qint64 mcsec);
 
 public slots: // all slots should be called indirectly with connect + emit because player is in separate thread
-    void playEffect(const qtauAudioSource &e, bool replace = false, bool smoothly = true);
-    void playTrack (const qtauAudioSource &t, bool replace = false, bool smoothly = true);
+    void addEffect(qtauAudioSource *e, bool replace = false, bool smoothly = true);
+    void addTrack (qtauAudioSource *t, bool replace = false, bool smoothly = true);
 
     void play();
     void pause();
@@ -49,6 +49,9 @@ private slots:
     void onAllTracksEnded();
 
 protected:
+    qint64 readData(char *data, qint64 maxlen) override;
+    qint64 writeData(const char *, qint64)     override { return 0; }
+
     QList<qtauAudioSource*> tracks;  // copies are stored here to ensure playback if originals will change
     QList<qtauAudioSource*> effects; // tracks and effects are read in a separate thread
 

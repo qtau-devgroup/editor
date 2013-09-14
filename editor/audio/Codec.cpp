@@ -79,13 +79,18 @@ bool qtauCodecRegistry::addCodec(qtauAudioCodecFactory *factory, bool replace)
     return result;
 }
 
-QList<QString> qtauCodecRegistry::listCodecs()
+QList<QString> qtauCodecRegistry::listCodecs(const QString &preferred)
 {
     QList<QString> result;
 
-    if (!codecsByMime.isEmpty())
-        foreach (const QString &ext, codecsByExt.keys())
-            result.append(QString("%1 - %2 (*.%3)").arg(ext).arg(codecsByExt[ext]->desc()).arg(ext));
+    if (!codecsByExt.isEmpty())
+        for (auto &c :codecsByExt)
+        {
+            QString dialogStr = QString("%1 - %2 (*.%3)").arg(c->ext()).arg(c->desc()).arg(c->ext());
+
+            if (c->ext() == preferred) result.prepend(dialogStr);
+            else                       result.append (dialogStr);
+        }
 
     return result;
 }

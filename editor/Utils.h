@@ -3,17 +3,16 @@
 #ifndef UTILS_H
 #define UTILS_H
 
+#include <QObject>
+#include <QVector>
 #include <QString>
-#include <QDebug>
-#include <assert.h>
 #include <QPoint>
 #include <QSize>
-
-#include <QtWidgets/QWidget>
+#include <QPair>
 
 
 const QString c_qtau_name = QStringLiteral("QTau");
-const QString c_qtau_ver  = QStringLiteral("α1");
+const QString c_qtau_ver  = QStringLiteral(u"α1");
 
 /* Pulses Per Quarter note - standard timing resolution of a MIDI sequencer,
      needs to be divisible by 16 and 3 to support 1/64 notes and triplets.
@@ -39,8 +38,8 @@ struct SNoteSetup {
     int quantize    = 32;   // 1/x note length, used as unit of offset for singing notes
     int length      = 32;   // 1/x singing note length unit (len=4 means 1/4, 2/4 etc +1/4)
 
-    int barWidth    = c_zoom_note_widths[cdef_zoom_index] * 4;
-    int octHeight   = cdef_note_height * 12;
+    int barWidth    = note.width()  * notesInBar;
+    int octHeight   = note.height() * 12;
 };
 //----------------------------------------------------
 
@@ -95,13 +94,10 @@ protected:
     QString lastTime = QStringLiteral(u"none");
     bool    saving   = true;
 
-    QList<QString> history;
+    QList<QPair<ELog, QString>> history;
     void reemit(const QString &msg, ELog type);
 
 };
-
-
-int snap(int value, int unit, int baseValue = 0);  /// baseValue % unit is added to result
 
 
 // conversion table of pianoroll keyboard key code (C1-B7) to fundamental frequency

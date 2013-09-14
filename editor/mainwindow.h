@@ -26,6 +26,7 @@ class QToolBar;
 class QTabWidget;
 class QTextEdit;
 class QToolBar;
+class QSplitter;
 
 
 namespace Ui {
@@ -116,6 +117,7 @@ protected:
     QWidget        *vocalWavePanel  = nullptr; // used to switch its visibility, hidden by default
     QWidget        *musicWavePanel  = nullptr;
     QWidget        *drawZonePanel   = nullptr;
+    QSplitter      *editorSplitter  = nullptr;
 
     qtauDynLabel   *fgDynLbl        = nullptr;
     qtauDynLabel   *bgDynLbl        = nullptr;
@@ -141,6 +143,7 @@ protected:
     QString docName;
     QString lastScoreDir;
     QString lastAudioDir;
+    QString audioExt;
 
     void dragEnterEvent (QDragEnterEvent*);
     void dragMoveEvent  (QDragMoveEvent *);

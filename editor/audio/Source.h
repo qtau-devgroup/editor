@@ -27,7 +27,7 @@ class qtauAudioSource : public QBuffer
 
 public:
     explicit qtauAudioSource(QObject *parent = 0);
-    explicit qtauAudioSource(const QBuffer& b, const QAudioFormat &f, QObject *parent = 0);
+    explicit qtauAudioSource(const QByteArray& data, const QAudioFormat &f, QObject *parent = 0);
 
     // generates tonal periodic wave
     explicit qtauAudioSource(const SWavegenSetup &s, QObject *parent = 0);

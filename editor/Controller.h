@@ -29,12 +29,14 @@ public:
     bool run(); // app startup & setup, window creation
 
 signals:
-    void playEffect(const qtauAudioSource &e);
-    void playTrack (const qtauAudioSource &t);
+    void setEffect(qtauAudioSource *e, bool replace, bool smoothly);
+    void setTrack (qtauAudioSource *t, bool replace, bool smoothly);
 
     void playStart();
     void playPause();
     void playStop();
+
+    void playerSetVolume(int level);
 
 public slots:
     void onAppMessage(const QString& msg);
@@ -44,7 +46,9 @@ public slots:
 
     void onLoadAudio(QString fileName);
     void onSaveAudio(QString fileName, bool rewrite);
+
     void onAudioPlaybackEnded();
+    void onAudioPlaybackTick(qint64 mcsecElapsed);
 
     void onRequestSynthesis();
     void onRequestStartPlayback();

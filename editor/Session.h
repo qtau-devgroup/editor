@@ -5,8 +5,9 @@
 
 #include "Utils.h"
 #include "NoteEvents.h"
-
 #include "utauloid/ust.h"
+
+#include <QMap>
 
 class qtauAudioSource;
 

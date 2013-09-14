@@ -3,8 +3,8 @@
 #ifndef PIANO_H
 #define PIANO_H
 
-#include <QVector>
 #include "Utils.h"
+#include <QWidget>
 
 class QPixmap;
 
@@ -135,8 +135,6 @@ public:
         {
             key *result = 0;
             int  ind    = keyIndex(p);
-
-            assert(ind < 12);
 
             if (ind > -1)
                 result = &keys[ind];

@@ -4,6 +4,7 @@
 #include "ui/noteEditorHandlers.h"
 #include "NoteEvents.h"
 
+#include <qevent.h>
 #include <QTime>
 #include <QTimer>
 #include <qpainter.h>

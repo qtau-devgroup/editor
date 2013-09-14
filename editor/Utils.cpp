@@ -2,6 +2,8 @@
 
 #include "Utils.h"
 #include <QTime>
+#include <QDebug>
+
 #include <qmath.h>
 
 
@@ -15,19 +17,15 @@ vsLog* vsLog::instance()
 void vsLog::r()
 {
     vslog_instance()->enableHistory(false);
-    QList<QString> &hst = vslog_instance()->history;
+    auto &hst = vslog_instance()->history;
 
-    while (!hst.isEmpty())
+    for (auto &stored: hst)
     {
-        QString &stored = hst.first();
-
-        if (stored.isEmpty())
-            vslog_instance()->reemit("",  ELog::none);
-        else
-            vslog_instance()->reemit(stored.remove(0,1), (ELog)stored.left(1).toInt());
-
-        hst.removeFirst();
+        if (stored.second.isEmpty()) vslog_instance()->reemit("", ELog::none);
+        else                         vslog_instance()->reemit(stored.second, stored.first);
     }
+
+    hst.clear();
 }
 
 void vsLog::reemit(const QString &msg, ELog type) { emit message(msg, type); }
@@ -55,15 +53,5 @@ void vsLog::addMessage(const QString &msg, ELog type)
     emit message(m, type);
 
     if (saving)
-        history.append(QString("%1").arg((char)type) + m);
-}
-
-int snap(int value, int unit, int baseValue)
-{
-    int baseOffset = baseValue % unit;
-    value -= baseOffset;
-    int prev = value / unit;
-    float percent = (float)(value % unit) / (float)unit;
-
-    return ((percent >= 0.5) ? (prev+1) * unit : prev * unit) + baseOffset;
+        history.append(QPair<ELog, QString>(type, m));
 }

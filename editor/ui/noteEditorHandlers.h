@@ -5,7 +5,6 @@
 
 #include "Utils.h"
 #include "ui/Config.h"
-#include <qevent.h>
 
 class qtauEvent;
 class qtauNoteEditor;
@@ -17,6 +16,7 @@ class qtauEvent_NoteText;
 class qtauEvent_NoteEffect;
 
 class QLineEdit;
+class QMouseEvent;
 
 
 /// default controller for note editor
@@ -108,10 +108,10 @@ protected:
     void lazyUpdate();
     //------------------------------------------------
 
-    virtual void mouseDoubleClickEvent(QMouseEvent  *event);
-    virtual void mouseMoveEvent       (QMouseEvent  *event);
-    virtual void mousePressEvent      (QMouseEvent  *event);
-    virtual void mouseReleaseEvent    (QMouseEvent  *event);
+    virtual void mouseDoubleClickEvent(QMouseEvent*);
+    virtual void mouseMoveEvent       (QMouseEvent*);
+    virtual void mousePressEvent      (QMouseEvent*);
+    virtual void mouseReleaseEvent    (QMouseEvent*);
 
     // what happens in session and needs to be reflected in editor
     void onNoteAdd   (qtauEvent_NoteAddition *event);
@@ -167,8 +167,8 @@ public:
     ~qtauEd_SelectRect();
 
 protected:
-    void mouseMoveEvent   (QMouseEvent  *event) override;
-    void mouseReleaseEvent(QMouseEvent  *event) override;
+    void mouseMoveEvent   (QMouseEvent*) override;
+    void mouseReleaseEvent(QMouseEvent*) override;
 
     void mouseDoubleClickEvent(QMouseEvent*) override { changeController(new qtauEdController(this)); }
     void mousePressEvent      (QMouseEvent*) override { changeController(new qtauEdController(this)); }
@@ -189,8 +189,8 @@ public:
     ~qtauEd_DragNotes();
 
 protected:
-    void mouseMoveEvent   (QMouseEvent  *event) override;
-    void mouseReleaseEvent(QMouseEvent  *event) override;
+    void mouseMoveEvent   (QMouseEvent*) override;
+    void mouseReleaseEvent(QMouseEvent*) override;
 
     void mouseDoubleClickEvent(QMouseEvent*) override { changeController(new qtauEdController(this)); }
     void mousePressEvent      (QMouseEvent*) override { changeController(new qtauEdController(this)); }
@@ -216,8 +216,8 @@ public:
     ~qtauEd_ResizeNote();
 
 protected:
-    void mouseMoveEvent   (QMouseEvent  *event) override;
-    void mouseReleaseEvent(QMouseEvent  *event) override;
+    void mouseMoveEvent   (QMouseEvent*) override;
+    void mouseReleaseEvent(QMouseEvent*) override;
 
     void mouseDoubleClickEvent(QMouseEvent*) override { changeController(new qtauEdController(this)); }
     void mousePressEvent      (QMouseEvent*) override { changeController(new qtauEdController(this)); }
@@ -243,8 +243,8 @@ public:
     ~qtauEd_AddNote();
 
 protected:
-    void mouseMoveEvent   (QMouseEvent  *event) override;
-    void mouseReleaseEvent(QMouseEvent  *event) override;
+    void mouseMoveEvent   (QMouseEvent*) override;
+    void mouseReleaseEvent(QMouseEvent*) override;
 
     void mouseDoubleClickEvent(QMouseEvent*) override { changeController(new qtauEdController(this)); }
     void mousePressEvent      (QMouseEvent*) override { changeController(new qtauEdController(this)); }

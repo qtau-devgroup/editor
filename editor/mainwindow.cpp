@@ -47,24 +47,29 @@ const QString c_dynlbl_css_fg  = QString("QLabel { color : %1; background-color 
         .arg(cdef_color_dynbtn_on).arg(cdef_color_dynbtn_on_bg);
 
 
-QSettings settings("QTau_Devgroup", "QTau");
+QSettings settings("QTau_Devgroup", c_qtau_name);
 
-const QString c_key_dir_score   = "last_score_dir";
-const QString c_key_dir_audio   = "last_audio_dir";
-const QString c_key_win_size    = "window_size";
-const QString c_key_win_max     = "window_fullscreen";
-const QString c_key_show_lognum = "show_new_log_number";
-const QString c_key_dynpanel_on = "dynamics_panel_visible";
+const QString c_key_dir_score   = QStringLiteral("last_score_dir");
+const QString c_key_dir_audio   = QStringLiteral("last_audio_dir");
+const QString c_key_win_size    = QStringLiteral("window_size");
+const QString c_key_win_max     = QStringLiteral("window_fullscreen");
+const QString c_key_show_lognum = QStringLiteral("show_new_log_number");
+const QString c_key_dynpanel_on = QStringLiteral("dynamics_panel_visible");
+const QString c_key_sound       = QStringLiteral("sould_level");
+const QString c_key_audio_codec = QStringLiteral("save_audio_codec");
 
-const QString c_doc_txt         = ":/tr/documentation_en.txt";
-const QString c_icon_app        = ":/images/appicon_ouka_alice.png";
-const QString c_icon_speaker    = ":/images/speaker.png";
-const QString c_icon_editor     = ":/images/b_notes.png";
-const QString c_icon_voices     = ":/images/b_mic.png";
-const QString c_icon_plugins    = ":/images/b_plug.png";
-const QString c_icon_settings   = ":/images/b_gear.png";
-const QString c_icon_doc        = ":/images/b_manual.png";
-const QString c_icon_log        = ":/images/b_envelope.png";
+const QString c_doc_txt         = QStringLiteral(":/tr/documentation_en.txt");
+const QString c_icon_app        = QStringLiteral(":/images/appicon_ouka_alice.png");
+const QString c_icon_sound      = QStringLiteral(":/images/speaker.png");
+const QString c_icon_mute       = QStringLiteral(":/images/speaker_mute.png");
+const QString c_icon_editor     = QStringLiteral(":/images/b_notes.png");
+const QString c_icon_voices     = QStringLiteral(":/images/b_mic.png");
+const QString c_icon_plugins    = QStringLiteral(":/images/b_plug.png");
+const QString c_icon_settings   = QStringLiteral(":/images/b_gear.png");
+const QString c_icon_doc        = QStringLiteral(":/images/b_manual.png");
+const QString c_icon_log        = QStringLiteral(":/images/b_envelope.png");
+const QString c_icon_play       = QStringLiteral(":/images/b_play.png");
+const QString c_icon_pause      = QStringLiteral(":/images/b_pause.png");
 
 
 MainWindow::MainWindow(QWidget *parent) :
@@ -271,20 +276,20 @@ MainWindow::MainWindow(QWidget *parent) :
 
     editorUpperPanel->setLayout(gl);
 
-    QSplitter *spl = new QSplitter(Qt::Vertical, this);
-    spl->setContentsMargins(0,0,0,0);
-    spl->addWidget(editorUpperPanel);
-    spl->addWidget(vocalWavePanel);
-    spl->addWidget(musicWavePanel);
-    spl->addWidget(drawZonePanel);
-    spl->setStretchFactor(0, 1);
-    spl->setStretchFactor(1, 0);
-    spl->setStretchFactor(2, 0);
-    spl->setStretchFactor(3, 0);
+    editorSplitter = new QSplitter(Qt::Vertical, this);
+    editorSplitter->setContentsMargins(0,0,0,0);
+    editorSplitter->addWidget(editorUpperPanel);
+    editorSplitter->addWidget(vocalWavePanel);
+    editorSplitter->addWidget(musicWavePanel);
+    editorSplitter->addWidget(drawZonePanel);
+    editorSplitter->setStretchFactor(0, 1);
+    editorSplitter->setStretchFactor(1, 0);
+    editorSplitter->setStretchFactor(2, 0);
+    editorSplitter->setStretchFactor(3, 0);
 
     QVBoxLayout *edVBL = new QVBoxLayout();
     edVBL->setContentsMargins(0,0,0,0);
-    edVBL->addWidget(spl);
+    edVBL->addWidget(editorSplitter);
 
     QWidget *editorPanel = new QWidget(this);
     editorPanel->setContentsMargins(0,0,0,0);
@@ -420,11 +425,11 @@ MainWindow::MainWindow(QWidget *parent) :
     volume->setMaximum(100);
     volume->setSingleStep(1);
     volume->setPageStep(1);
-    volume->setValue(50);
+    volume->setValue(settings.value(c_key_sound, 50).toInt());
     volume->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Preferred);
     connect(playerTB, SIGNAL(orientationChanged(Qt::Orientation)), volume, SLOT(setOrientation(Qt::Orientation)));
 
-    muteBtn = new QAction(QIcon(c_icon_speaker), "", this);
+    muteBtn = new QAction(QIcon(c_icon_sound), "", this);
     muteBtn->setCheckable(true);
     connect(muteBtn, SIGNAL(toggled(bool)), SLOT(onMute(bool)));
 
@@ -499,21 +504,22 @@ MainWindow::MainWindow(QWidget *parent) :
 
     lastScoreDir     = settings.value(c_key_dir_score,   "").toString();
     lastAudioDir     = settings.value(c_key_dir_audio,   "").toString();
+    audioExt         = settings.value(c_key_audio_codec, "").toString();
     showNewLogNumber = settings.value(c_key_show_lognum, true).toBool();
 
-    if (!settings.value(c_key_dynpanel_on).toBool())
+    if (!settings.value(c_key_dynpanel_on, true).toBool())
     {
-        QList<int> panelSizes = spl->sizes();
+        QList<int> panelSizes = editorSplitter->sizes();
         panelSizes[3] = 0;
-        spl->setSizes(panelSizes);
+        editorSplitter->setSizes(panelSizes);
     }
 
-    if (settings.value(c_key_win_max).toBool())
+    if (settings.value(c_key_win_max, false).toBool())
         showMaximized();
     else
     {
         QRect winGeom = geometry();
-        QRect setGeom = settings.value(c_key_win_size, QRect(QPoint(0,0), minimumSize())).value<QRect>();
+        QRect setGeom = settings.value(c_key_win_size, QRect(winGeom.topLeft(), minimumSize())).value<QRect>();
 
         if (setGeom.width() >= winGeom.width() && setGeom.height() >= setGeom.height())
             setGeometry(setGeom);
@@ -538,7 +544,11 @@ void MainWindow::closeEvent(QCloseEvent *event)
     settings.setValue(c_key_win_size,    geometry());
     settings.setValue(c_key_win_max,     isMaximized());
     settings.setValue(c_key_show_lognum, showNewLogNumber);
-    settings.setValue(c_key_dynpanel_on, drawZonePanel->isVisible());
+    settings.setValue(c_key_sound,       volume->value());
+    settings.setValue(c_key_audio_codec, audioExt);
+
+    QList<int> panelSizes = editorSplitter->sizes();
+    settings.setValue(c_key_dynpanel_on, panelSizes[3] > 0);
 
     event->accept();
 }
@@ -627,7 +637,7 @@ void MainWindow::onSaveUSTAs()
 
 void MainWindow::onSaveAudioAs()
 {
-    QList<QString> codecs = qtauCodecRegistry::instance()->listCodecs();
+    QList<QString> codecs = qtauCodecRegistry::instance()->listCodecs(audioExt);
 
     if (!codecs.isEmpty())
     {
@@ -643,7 +653,10 @@ void MainWindow::onSaveAudioAs()
 
         if (!fileName.isEmpty())
         {
-            lastAudioDir = QFileInfo(fileName).absolutePath();
+            QFileInfo fi(fileName);
+            audioExt     = fi.suffix();
+            lastAudioDir = fi.absolutePath();
+
             emit saveAudio(fileName, true);
         }
     }
@@ -733,7 +746,7 @@ void MainWindow::onPlaybackState(EAudioPlayback state)
     case EAudioPlayback::noAudio:
     case EAudioPlayback::needsSynth:
         ui->actionPlay->setText(tr("Play"));
-        ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
+        ui->actionPlay->setIcon(QIcon(c_icon_play));
         ui->actionStop->setEnabled(false);
         ui->actionBack->setEnabled(false);
         ui->actionRepeat->setEnabled(false);
@@ -747,7 +760,7 @@ void MainWindow::onPlaybackState(EAudioPlayback state)
 
     case EAudioPlayback::repeating: // this and following states imply that actions were enabled before
     case EAudioPlayback::playing:
-        ui->actionPlay->setIcon(QIcon(":/images/b_pause.png"));
+        ui->actionPlay->setIcon(QIcon(c_icon_pause));
         ui->actionPlay->setText(tr("Pause"));
         ui->actionStop->setEnabled(true);
         ui->actionBack->setEnabled(true);
@@ -759,7 +772,7 @@ void MainWindow::onPlaybackState(EAudioPlayback state)
         ui->actionPlay->setChecked(false);
         ui->actionRepeat->setChecked(false);
     case EAudioPlayback::paused:
-        ui->actionPlay->setIcon(QIcon(":/images/b_play.png"));
+        ui->actionPlay->setIcon(QIcon(c_icon_play));
         ui->actionPlay->setText(tr("Play"));
         ui->actionSave_audio_as->setEnabled(true);
         break;
@@ -945,8 +958,6 @@ void MainWindow::onTabSelected(int index)
 
 void MainWindow::onZoomed(int z)
 {
-    assert(z >= 0 && z < c_zoom_num); // because if it isn't, you're DOOMED
-
     // modify note data and send it to widgets
     ns.note.setWidth(c_zoom_note_widths[z]);
 
@@ -1075,8 +1086,8 @@ void MainWindow::onMute(bool m)
 {
     volume->setEnabled(!m);
 
-    if (m) muteBtn->setIcon(QIcon(":/images/speaker-mute.png"));
-    else   muteBtn->setIcon(QIcon(":/images/speaker.png"));
+    if (m) muteBtn->setIcon(QIcon(c_icon_mute));
+    else   muteBtn->setIcon(QIcon(c_icon_sound));
 
     emit setVolume(m ? 0 : volume->value());
 }

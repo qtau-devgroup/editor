@@ -4,6 +4,7 @@
 #include "audio/Resampler.h"
 #include "Utils.h"
 #include <qendian.h>
+#include <QDataStream>
 
 
 //----- WAV PCM RIFF header parts -----------------------

@@ -5,6 +5,7 @@
 
 #include "Utils.h"
 #include "ui/Config.h"
+#include <QWidget>
 #include <QUrl>
 
 class qtauEvent_NoteAddition;

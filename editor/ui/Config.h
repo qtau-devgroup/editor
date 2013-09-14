@@ -6,7 +6,6 @@
 #include <QRect>
 #include <QVector>
 #include <QMap>
-
 #include <QString>
 
 

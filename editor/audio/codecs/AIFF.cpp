@@ -4,6 +4,7 @@
 #include "audio/Resampler.h"
 #include "Utils.h"
 
+#include <QDataStream>
 #include <qendian.h>
 #include <qmath.h>
 #include <stdint.h>

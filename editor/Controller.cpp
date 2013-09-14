@@ -18,7 +18,7 @@
 
 
 qtauController::qtauController(QObject *parent) :
-    QObject(parent), activeSession(0)
+    QObject(parent)
 {
     qtauCodecRegistry *cr = qtauCodecRegistry::instance();
     cr->addCodec(new qtauWavCodecFactory ());
@@ -27,6 +27,20 @@ qtauController::qtauController(QObject *parent) :
 //    cr->addCodec(new qtauOggCodecFactory ());
 
     player = new qtmmPlayer();
+    player->moveToThread(&audioThread);
+
+    connect(this, &qtauController::setEffect,  player, &qtmmPlayer::addEffect);
+    connect(this, &qtauController::setTrack,   player, &qtmmPlayer::addTrack);
+    connect(this, &qtauController::playStart,  player, &qtmmPlayer::play);
+    connect(this, &qtauController::playPause,  player, &qtmmPlayer::pause);
+    connect(this, &qtauController::playStop,   player, &qtmmPlayer::stop);
+
+    connect(this, &qtauController::playerSetVolume, player, &qtmmPlayer::setVolume);
+
+    connect(player, &qtmmPlayer::playbackEnded, this, &qtauController::onAudioPlaybackEnded);
+    connect(player, &qtmmPlayer::tick,          this, &qtauController::onAudioPlaybackTick);
+
+    audioThread.start();
 
     setupTranslations();
     setupPlugins();
@@ -35,6 +49,12 @@ qtauController::qtauController(QObject *parent) :
 
 qtauController::~qtauController()
 {
+    if (audioThread.isRunning())
+    {
+        audioThread.quit();
+        audioThread.wait();
+    }
+
     delete mw;
 }
 
@@ -109,12 +129,12 @@ void qtauController::newEmptySession()
 {
     activeSession = new qtauSession(this);
 
-    connect(activeSession, SIGNAL(requestSynthesis()),      SLOT(onRequestSynthesis     ()));
-    connect(activeSession, SIGNAL(requestStartPlayback()),  SLOT(onRequestStartPlayback ()));
-    connect(activeSession, SIGNAL(requestPausePlayback()),  SLOT(onRequestPausePlayback ()));
-    connect(activeSession, SIGNAL(requestStopPlayback()),   SLOT(onRequestStopPlayback  ()));
-    connect(activeSession, SIGNAL(requestResetPlayback()),  SLOT(onRequestResetPlayback ()));
-    connect(activeSession, SIGNAL(requestRepeatPlayback()), SLOT(onRequestRepeatPlayback()));
+    connect(activeSession, &qtauSession::requestSynthesis,      this, &qtauController::onRequestSynthesis     );
+    connect(activeSession, &qtauSession::requestStartPlayback,  this, &qtauController::onRequestStartPlayback );
+    connect(activeSession, &qtauSession::requestPausePlayback,  this, &qtauController::onRequestPausePlayback );
+    connect(activeSession, &qtauSession::requestStopPlayback,   this, &qtauController::onRequestStopPlayback  );
+    connect(activeSession, &qtauSession::requestResetPlayback,  this, &qtauController::onRequestResetPlayback );
+    connect(activeSession, &qtauSession::requestRepeatPlayback, this, &qtauController::onRequestRepeatPlayback);
 }
 
 //------------------------------------------
@@ -214,14 +234,22 @@ void qtauController::onAppMessage(const QString &msg)
     mw->setWindowState(Qt::WindowActive); // TODO: test
 }
 
-qtauAudioSource *tmpAS = 0;
+#include "audio/Mixer.h"
 
 void qtauController::pianoKeyPressed(int keyNum)
 {
     if (!synths.isEmpty())
     {
-        if (!tmpAS)
-            tmpAS = new qtauAudioSource(this);
+        static qtauAudioSource *a = nullptr;
+
+        if (a)
+        {
+            delete a;
+            a = nullptr;
+        }
+
+        if (!a)
+            a = new qtauAudioSource();
 
         ISynth *s = synths.values().first();
         ust u;
@@ -229,8 +257,11 @@ void qtauController::pianoKeyPressed(int keyNum)
         u.notes.append(ust_note(0, "a", 0, 480*3, keyNum)); // 480 pulses * 3 @ 120bpm is 3 notes, 1.5 sec
         s->setVocals(u);
 
-        if (s->synthesize(*tmpAS))
-            emit playEffect(*tmpAS);
+        if (s->synthesize(*a))
+        {
+            emit setEffect(a, true, true);
+            emit playStart();
+        }
     }
 }
 
@@ -271,16 +302,18 @@ void qtauController::onLoadAudio(QString fileName)
 
 void qtauController::onAudioPlaybackEnded()
 {
-//    if (playState.state == Repeating)
-//        player->play();
-
-    playState.state = Stopped;
-    activeSession->setPlaybackState(EAudioPlayback::stopped);
+    if (playState.state == Repeating)
+        onRequestStartPlayback();
+    else
+    {
+        playState.state = Stopped;
+        activeSession->setPlaybackState(EAudioPlayback::stopped);
+    }
 }
 
 void qtauController::onVolumeChanged(int level)
 {
-    player->setVolume(level);
+    emit playerSetVolume(level);
 }
 
 void qtauController::onRequestSynthesis()
@@ -291,7 +324,7 @@ void qtauController::onRequestSynthesis()
         {
             if (playState.state != Stopped)
             {
-                player->stop();
+                emit playStop();
                 activeSession->setPlaybackState(EAudioPlayback::stopped);
             }
 
@@ -327,47 +360,34 @@ void qtauController::onRequestStartPlayback()
     bool gotVocal = v.vocalWave && !v.vocalWave->buffer().isEmpty();
     bool gotMusic = m.musicWave && !m.musicWave->buffer().isEmpty();
 
-    if (gotVocal)
+    if (gotVocal || gotMusic)
     {
-        if (gotMusic)
+        if (gotVocal)
         {
-            // play mixdown
-        }
-        else
-        {
-            playState.state = Playing;
-            activeSession->setPlaybackState(EAudioPlayback::playing);
-
-            if (!v.vocalWave->isOpen())
+            if (!v.vocalWave->isReadable())
                 v.vocalWave->open(QIODevice::ReadOnly);
 
-            if (v.vocalWave->isOpen())
-                v.vocalWave->reset();
-
-            emit playTrack(*v.vocalWave);
+            v.vocalWave->reset();
+            emit setTrack(v.vocalWave, true, false);
         }
-    }
-    else if (gotMusic)
-    {
-        if (!(playState.state == Playing || playState.state == Repeating))
+
+        if (gotMusic)
         {
-            // play just audio
-            if (playState.state != Paused)
-            {
-                if (!m.musicWave->isOpen())
-                    m.musicWave->open(QIODevice::ReadOnly);
+            if (!m.musicWave->isReadable())
+                m.musicWave->open(QIODevice::ReadOnly);
 
-                m.musicWave->reset();
-            }
+            m.musicWave->reset();
+            emit setTrack(m.musicWave, false, false);
+        }
 
+        if (playState.state != Repeating)
+        {
             playState.state = Playing;
             activeSession->setPlaybackState(EAudioPlayback::playing);
-
-            emit playTrack(*m.musicWave);
         }
-        else vsLog::e("Controller is playing audio already, playback shouldn't be requested!");
+
+        emit playStart(); // won't do anything if nothing to play
     }
-    else vsLog::e("Controller can't play anything - session has no audio data at all");
 }
 
 void qtauController::onRequestPausePlayback()
@@ -376,7 +396,7 @@ void qtauController::onRequestPausePlayback()
     {
         playState.state = Paused;
         activeSession->setPlaybackState(EAudioPlayback::paused);
-        player->pause();
+        emit playPause();
     }
     else vsLog::e("Controller isn't playing anything, can't pause playback.");
 }
@@ -387,19 +407,24 @@ void qtauController::onRequestStopPlayback()
     {
         playState.state = Stopped;
         activeSession->setPlaybackState(EAudioPlayback::stopped);
-        player->stop();
+        emit playStop();
     }
     else vsLog::e("Controller isn't playing anything, can't pause playback.");
 }
 
 void qtauController::onRequestResetPlayback()
 {
-    player->stop();
+    emit playStop();
     playState.state = Stopped;
     onRequestStartPlayback();
 }
 
 void qtauController::onRequestRepeatPlayback()
+{
+    //
+}
+
+void qtauController::onAudioPlaybackTick(qint64 /*mcsecElapsed*/)
 {
     //
 }
