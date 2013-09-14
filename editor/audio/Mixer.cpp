@@ -2,8 +2,12 @@
 
 #include "audio/Mixer.h"
 #include "Utils.h"
-
+#include <math.h>
 #include <qendian.h>
+
+#ifndef M_SQRT1_2
+    #define M_SQRT1_2	0.70710678118654752440
+#endif
 
 qtauSoundMixer::qtauSoundMixer(QObject *parent) :
     qtauAudioSource(parent), replacingEffectsSmoothly(false), replacingTracksSmoothly(false)
