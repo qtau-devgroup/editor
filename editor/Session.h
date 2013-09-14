@@ -47,19 +47,22 @@ public:
     EAudioPlayback playbackState() const { return playSt; }
     void setPlaybackState(EAudioPlayback state);
 
-    typedef struct {
-        qtauAudioSource *vocalWave = nullptr;
+    typedef struct SVocalWaveSetup {
+        qtauAudioSource *vocalWave;
+        bool  needsSynthesis;
+        float volume;
 
-        bool  needsSynthesis = true;
-        float volume         = 1;
+        SVocalWaveSetup() : vocalWave(nullptr), needsSynthesis(true), volume(1.0) {}
     } VocalWaveSetup;
 
-    typedef struct {
-        qtauAudioSource *musicWave = nullptr;
+    typedef struct SMusicWaveSetup {
+        qtauAudioSource *musicWave;
 
-        qint64 offset = 0;
-        int    tempo  = 120;
-        float  volume = 1;
+        qint64 offset;
+        int    tempo;
+        float  volume;
+
+        SMusicWaveSetup() : musicWave(nullptr), offset(0), tempo(120), volume(1) {}
     } MusicWaveSetup;
 
     VocalWaveSetup& getVocal() { return vocal; }
@@ -99,9 +102,9 @@ public slots:
 protected:
     bool    parseUSTStrings(QStringList ustStrings);
     QString filePath;
-    QString docName      = QStringLiteral("Untitled");
-    bool    isModified   = false;
-    bool    hadSavePoint = false; // if was saved having a non-empty event stack
+    QString docName;
+    bool    isModified;
+    bool    hadSavePoint; // if was saved having a non-empty event stack
 
     VocalWaveSetup vocal;
     MusicWaveSetup music;
@@ -118,7 +121,7 @@ protected:
     bool processEvent(qtauEvent *) override;
     void stackChanged()            override;
 
-    EAudioPlayback playSt = EAudioPlayback::noAudio;
+    EAudioPlayback playSt;
 };
 
 #endif // SESSION_H

@@ -10,7 +10,8 @@
 #include <QDebug>
 
 
-qtmmPlayer::qtmmPlayer()
+qtmmPlayer::qtmmPlayer() :
+    audioOutput(nullptr), mixer(nullptr), volume(50)
 {
     vsLog::d("QtMultimedia :: supported output devices and codecs:");
     QList<QAudioDeviceInfo> advs = QAudioDeviceInfo::availableDevices(QAudio::AudioOutput);

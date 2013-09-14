@@ -26,7 +26,7 @@ void qtauDynLabel::setState(EState s)      { _state = s; }
 
 
 qtauDynDrawer::qtauDynDrawer(QWidget *parent) :
-    QWidget(parent)
+    QWidget(parent), offset(0), bgCache(nullptr)
 {
     //
 }

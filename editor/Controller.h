@@ -63,11 +63,11 @@ public slots:
     void pianoKeyReleased(int);
 
 protected:
-    qtmmPlayer *player = nullptr;
-    MainWindow *mw     = nullptr;
+    qtmmPlayer *player;
+    MainWindow *mw;
 
     QMap<QString, qtauSession*> sessions;
-    qtauSession *activeSession = nullptr;
+    qtauSession *activeSession;
 
     typedef enum {
         Playing = 0,
@@ -76,10 +76,12 @@ protected:
         Repeating
     } EPlayerState;
 
-    typedef struct {
+    typedef struct _PlayState {
         EPlayerState     state;
         qtauAudioSource *audio;
         qtauSession     *session;
+
+        _PlayState() : state(Stopped), audio(nullptr), session(nullptr) {}
     } SPlayState;
 
     SPlayState playState;

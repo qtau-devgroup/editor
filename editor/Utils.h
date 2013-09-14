@@ -12,7 +12,7 @@
 
 
 const QString c_qtau_name = QStringLiteral("QTau");
-const QString c_qtau_ver  = QStringLiteral(u"α1");
+const QString c_qtau_ver  = QStringLiteral("α1");
 
 /* Pulses Per Quarter note - standard timing resolution of a MIDI sequencer,
      needs to be divisible by 16 and 3 to support 1/64 notes and triplets.
@@ -27,19 +27,23 @@ const int c_zoom_note_widths[c_zoom_num] = {16,  32,  48,  64,  80,
                                             176, 208, 240, 304, 368, 480, 608};
 
 struct SNoteSetup {
-    QSize note        {c_zoom_note_widths[cdef_zoom_index], cdef_note_height}; // gui dimensions (in pixels)
+    QSize note;     // gui dimensions (in pixels)
 
-    int baseOctave  = 1;
-    int numOctaves  = 7;
+    int baseOctave;
+    int numOctaves;
 
-    int noteLength  = 4;    // denominator of note length 1
-    int notesInBar  = 4;    // noteLength=4 and notesInBar=4 means music time signature 4/4
-    int tempo       = 120;  // bpm
-    int quantize    = 32;   // 1/x note length, used as unit of offset for singing notes
-    int length      = 32;   // 1/x singing note length unit (len=4 means 1/4, 2/4 etc +1/4)
+    int noteLength; // denominator of note length 1
+    int notesInBar; // noteLength=4 and notesInBar=4 means music time signature 4/4
+    int tempo;      // bpm
+    int quantize;   // 1/x note length, used as unit of offset for singing notes
+    int length;     // 1/x singing note length unit (len=4 means 1/4, 2/4 etc +1/4)
 
-    int barWidth    = note.width()  * notesInBar;
-    int octHeight   = note.height() * 12;
+    int barWidth;
+    int octHeight;
+
+    SNoteSetup() : note(c_zoom_note_widths[cdef_zoom_index], cdef_note_height),
+        baseOctave(1), numOctaves(7), noteLength(4), notesInBar(4), tempo(120), quantize(32), length(32),
+        barWidth(note.width() * notesInBar), octHeight(note.height() * 12) {}
 };
 //----------------------------------------------------
 
@@ -73,6 +77,7 @@ class vsLog : public QObject
     Q_OBJECT
 
 public:
+    vsLog() : lastTime(QStringLiteral("none")), saving(true) {}
     static vsLog* instance();
 
     static void i(const QString &msg) { instance()->addMessage(msg, ELog::info);    }
@@ -91,14 +96,18 @@ signals:
     void message(QString, ELog);  // int is msg type from enum "vsLog::msgType"
 
 protected:
-    QString lastTime = QStringLiteral(u"none");
-    bool    saving   = true;
+    QString lastTime;
+    bool    saving;
 
     QList<QPair<ELog, QString>> history;
     void reemit(const QString &msg, ELog type);
 
 };
 
+union uichar {
+    char    c[4];
+    quint32 i;
+};
 
 // conversion table of pianoroll keyboard key code (C1-B7) to fundamental frequency
 //float *semitoneToFrequency[] = { 0, // skip index 0 since note numbers start from 1
@@ -109,10 +118,5 @@ protected:
 //    523.3,  554.4,  587.3,  622.3,  659.3,  698.5,  740.0,  784.0,  830.6,  880.0,  932.3,  987.8,   // 5th
 //    1046.5, 1108.7, 1174.7, 1244.5, 1318.5, 1396.9, 1480.0, 1568.0, 1661.2, 1760.0, 1864.7, 1975.5,  // 6th
 //    2093.0, 2217.5, 2349.3, 2489.0, 2637.0, 2793.8, 2960.0, 3136.0, 3322.4, 3520.0, 3729.3, 3951.1}; // 7th
-
-union uichar {
-    char    c[4];
-    quint32 i;
-};
 
 #endif // UTILS_H

@@ -6,7 +6,7 @@
 #include <qendian.h>
 
 qtauSoundMixer::qtauSoundMixer(QObject *parent) :
-    qtauAudioSource(parent)
+    qtauAudioSource(parent), replacingEffectsSmoothly(false), replacingTracksSmoothly(false)
 {
     fmt.setByteOrder(QAudioFormat::LittleEndian);
     fmt.setCodec("audio/pcm");
@@ -19,7 +19,7 @@ qtauSoundMixer::qtauSoundMixer(QObject *parent) :
 }
 
 qtauSoundMixer::qtauSoundMixer(QList<qtauAudioSource*> &tracks, QObject *parent) :
-    qtauAudioSource(parent)
+    qtauAudioSource(parent), replacingEffectsSmoothly(false), replacingTracksSmoothly(false)
 {
     foreach (qtauAudioSource *a, tracks)
         addTrack(a);

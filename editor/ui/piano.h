@@ -156,8 +156,8 @@ public:
 
 protected:
     QVector<octave> octaves;
-    key *pressedKey = nullptr;
-    key *hoveredKey = nullptr;
+    key *pressedKey;
+    key *hoveredKey;
     SNoteSetup ns;
 
 };

@@ -46,8 +46,8 @@ protected:
     QList<qtauAudioSource*> tracks; // keeps its own copy of audio data because original may be chaged, in another thread even
     QList<qtauAudioSource*> effects;
 
-    bool replacingEffectsSmoothly = false;
-    bool replacingTracksSmoothly  = false;
+    bool replacingEffectsSmoothly;
+    bool replacingTracksSmoothly;
 
     qint64 readData(char *data, qint64 maxlen) override;
     qint64 writeData(const char *, qint64)     override { return 0; } // unwritable, use addTrack/addEffect

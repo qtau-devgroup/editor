@@ -11,7 +11,7 @@ const int CONST_PIANO_LABELHEIGHT = 14;
 const int CONST_PIANO_LABELWIDTH  = 50;
 
 qtauPiano::qtauPiano(QWidget *parent) :
-    QWidget(parent), offset(0,0), labelCache(0), pressedKey(0), hoveredKey(0)
+    QWidget(parent), offset(0,0), labelCache(nullptr), pressedKey(nullptr), hoveredKey(nullptr)
 {
     // setup widget
     setFocusPolicy(Qt::NoFocus);

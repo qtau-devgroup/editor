@@ -68,11 +68,11 @@ protected:
     void mouseReleaseEvent    (QMouseEvent  *event);
     void wheelEvent           (QWheelEvent  *event);
 
-    int offset = 0;
+    int offset;
 
     SNoteSetup ns;
 
-    QPixmap *bgCache = nullptr;
+    QPixmap *bgCache;
     void updateCache();
 
 };

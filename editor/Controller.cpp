@@ -18,7 +18,7 @@
 
 
 qtauController::qtauController(QObject *parent) :
-    QObject(parent)
+    QObject(parent), player(nullptr), mw(nullptr), activeSession(nullptr)
 {
     qtauCodecRegistry *cr = qtauCodecRegistry::instance();
     cr->addCodec(new qtauWavCodecFactory ());

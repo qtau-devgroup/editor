@@ -102,33 +102,33 @@ public slots:
     void onSaveAudioAs();
 
 protected:
-    qtauSession    *doc             = nullptr;
+    qtauSession    *doc;
     SNoteSetup      ns;
-    QTabWidget     *tabs            = nullptr;
+    QTabWidget     *tabs;
 
-    qtauPiano      *piano           = nullptr;
-    qtauNoteEditor *noteEditor      = nullptr;
-    qtauDynDrawer  *drawZone        = nullptr;
-    qtauMeterBar   *meter           = nullptr;
+    qtauPiano      *piano;
+    qtauNoteEditor *noteEditor;
+    qtauDynDrawer  *drawZone;
+    qtauMeterBar   *meter;
 
-    qtauWaveform   *vocalWave       = nullptr;
-    qtauWaveform   *musicWave       = nullptr;
+    qtauWaveform   *vocalWave;
+    qtauWaveform   *musicWave;
 
-    QWidget        *vocalWavePanel  = nullptr; // used to switch its visibility, hidden by default
-    QWidget        *musicWavePanel  = nullptr;
-    QWidget        *drawZonePanel   = nullptr;
-    QSplitter      *editorSplitter  = nullptr;
+    QWidget        *vocalWavePanel; // used to switch its visibility, hidden by default
+    QWidget        *musicWavePanel;
+    QWidget        *drawZonePanel;
+    QSplitter      *editorSplitter;
 
-    qtauDynLabel   *fgDynLbl        = nullptr;
-    qtauDynLabel   *bgDynLbl        = nullptr;
+    qtauDynLabel   *fgDynLbl;
+    qtauDynLabel   *bgDynLbl;
 
-    QScrollBar     *hscr            = nullptr;
-    QScrollBar     *vscr            = nullptr;
-    QSlider        *zoom            = nullptr;
-    QSlider        *volume          = nullptr;
-    QAction        *muteBtn         = nullptr;
+    QScrollBar     *hscr;
+    QScrollBar     *vscr;
+    QSlider        *zoom;
+    QSlider        *volume;
+    QAction        *muteBtn;
 
-    QTextEdit      *logpad          = nullptr;
+    QTextEdit      *logpad;
 
     QList<QToolBar*> toolbars;
     void enableToolbars(bool enable = true);
@@ -136,9 +136,9 @@ protected:
     EPlayer playState;
 
     QColor  logTabTextColor;
-    int     logNewMessages   = 0;
-    bool    logHasErrors     = false;
-    bool    showNewLogNumber = true;
+    int     logNewMessages;
+    bool    logHasErrors;
+    bool    showNewLogNumber;
 
     QString docName;
     QString lastScoreDir;

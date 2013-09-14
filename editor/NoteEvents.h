@@ -50,7 +50,7 @@ protected:
     noteAddVector added;
     bool deleteInstead; // if it really is a delete event, so its transformation should be reversed
 
-    qtauEvent_NoteAddition* allocCopy() const { return new qtauEvent_NoteAddition(*this); }
+    qtauEvent_NoteAddition* allocCopy() const override { return new qtauEvent_NoteAddition(*this); }
 
 };
 
@@ -80,7 +80,7 @@ public:
 protected:
     noteResizeVector resized;
 
-    qtauEvent_NoteResize* allocCopy() const { return new qtauEvent_NoteResize(*this); }
+    qtauEvent_NoteResize* allocCopy() const override { return new qtauEvent_NoteResize(*this); }
 
 };
 
@@ -108,7 +108,7 @@ public:
 protected:
     noteMoveVector moved;
 
-    qtauEvent_NoteMove* allocCopy() const { return new qtauEvent_NoteMove(*this); }
+    qtauEvent_NoteMove* allocCopy() const override { return new qtauEvent_NoteMove(*this); }
 };
 
 
@@ -133,7 +133,7 @@ public:
 protected:
     noteTextVector text;
 
-    qtauEvent_NoteText* allocCopy() const { return new qtauEvent_NoteText(*this); }
+    qtauEvent_NoteText* allocCopy() const override { return new qtauEvent_NoteText(*this); }
 };
 
 
@@ -157,7 +157,7 @@ public:
 protected:
     noteEffectVector effect;
 
-    qtauEvent_NoteEffect* allocCopy() const { return new qtauEvent_NoteEffect(*this); }
+    qtauEvent_NoteEffect* allocCopy() const override { return new qtauEvent_NoteEffect(*this); }
 
 };
 

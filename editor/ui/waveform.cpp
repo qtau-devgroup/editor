@@ -11,7 +11,8 @@
 
 
 qtauWaveform::qtauWaveform(QWidget *parent) :
-    QWidget(parent)
+    QWidget(parent), offset(0), wave(nullptr), bgCache(nullptr), bpm(120),
+    beatWidth(c_zoom_note_widths[cdef_zoom_index]), framesVisible(0)
 {
     //float noteDuration = 60.f / bpm; // 0.5 seconds each note, 4 notes (1 bar) in 2 seconds
 }

@@ -73,7 +73,8 @@ const QString c_icon_pause      = QStringLiteral(":/images/b_pause.png");
 
 
 MainWindow::MainWindow(QWidget *parent) :
-    QMainWindow(parent), ui(new Ui::MainWindow)
+    QMainWindow(parent), ui(new Ui::MainWindow),
+    logNewMessages(0), logHasErrors(false), showNewLogNumber(true)
 {
     ui->setupUi(this);
 

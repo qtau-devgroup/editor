@@ -13,7 +13,8 @@
 
 
 qtauSession::qtauSession(QObject *parent) :
-    qtauEventManager(parent)
+    qtauEventManager(parent), docName(QStringLiteral("Untitled")), isModified(false), hadSavePoint(false),
+    playSt(EAudioPlayback::noAudio)
 {
     vocal.vocalWave = new qtauAudioSource(this);
     music.musicWave = new qtauAudioSource(this);

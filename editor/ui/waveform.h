@@ -37,17 +37,17 @@ protected:
     void mouseReleaseEvent    (QMouseEvent  *event);
     void wheelEvent           (QWheelEvent  *event);
 
-    int offset = 0;
-    qtauAudioSource *wave = nullptr;
+    int offset;
+    qtauAudioSource *wave;
 
-    QPixmap *bgCache = nullptr;
+    QPixmap *bgCache;
     void updateCache();
     void calcSetup(); // calculate how many samples can fit into geometry.width
 
-    int bpm       = 120;
-    int beatWidth = c_zoom_note_widths[cdef_zoom_index]; // in pixels
+    int bpm;
+    int beatWidth; // in pixels
 
-    float framesVisible = 0;
+    float framesVisible;
 };
 
 #endif // WAVEFORM_H

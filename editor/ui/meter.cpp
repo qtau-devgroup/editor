@@ -21,7 +21,7 @@ const QString c_lblcache_font = "Arial";
 
 
 qtauMeterBar::qtauMeterBar(QWidget *parent) :
-    QWidget(parent)
+    QWidget(parent), offset(0), bgCache(nullptr), labelCache(nullptr)
 {
     // cache bar numbers into pixmap - maybe that's a bit of an overkill, but won't hurt RAM usage much
     labelCache = new QPixmap(c_lblcache_line_width, c_lblcache_line_height * c_lblcache_line_cached);

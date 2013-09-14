@@ -57,10 +57,10 @@ protected:
     QList<qtauAudioSource*> tracks;  // copies are stored here to ensure playback if originals will change
     QList<qtauAudioSource*> effects; // tracks and effects are read in a separate thread
 
-    QAudioOutput   *audioOutput = 0;
-    qtauSoundMixer *mixer       = 0;
+    QAudioOutput   *audioOutput;
+    qtauSoundMixer *mixer;
 
-    int volume = 50;
+    int volume;
 
 };
 
