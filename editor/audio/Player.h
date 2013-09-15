@@ -5,12 +5,13 @@
 
 #include <QObject>
 #include <QAudio>
-#include <QThread>
 #include <QIODevice>
 
 class QAudioOutput;
 class qtauAudioSource;
 class qtauSoundMixer;
+
+class QTimer;
 
 
 // player is designed to work in a separate thread to avoid audio glitches on playback
@@ -18,19 +19,26 @@ class qtauSoundMixer;
 class qtmmPlayer : public QIODevice
 {
     Q_OBJECT
-    QThread audioThread;
 
 public:
     qtmmPlayer();
     ~qtmmPlayer();
+
+    bool   isSequential()   const override { return true;   }
+    qint64 pos()            const override { return 0;      }
+    bool   seek(qint64)           override { return false;  }
+    bool   atEnd()          const override { return bytesAvailable() == 0;   }
+    bool   reset()                override { return false;  }
+    qint64 bytesAvailable() const override { return size(); }
+    qint64 size()           const override;
 
 signals:
     void playbackEnded();
     void tick(qint64 mcsec);
 
 public slots: // all slots should be called indirectly with connect + emit because player is in separate thread
-    void addEffect(qtauAudioSource *e, bool replace = false, bool smoothly = true);
-    void addTrack (qtauAudioSource *t, bool replace = false, bool smoothly = true);
+    void addEffect(qtauAudioSource *e, bool replace = false, bool smoothly = true, bool copy = true);
+    void addTrack (qtauAudioSource *t, bool replace = false, bool smoothly = true, bool copy = true);
 
     void play();
     void pause();
@@ -59,6 +67,7 @@ protected:
 
     QAudioOutput   *audioOutput;
     qtauSoundMixer *mixer;
+    QTimer         *stopTimer;
 
     int volume;
 

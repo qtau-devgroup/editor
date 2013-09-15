@@ -29,7 +29,7 @@ qtauController::qtauController(QObject *parent) :
     player = new qtmmPlayer();
     player->moveToThread(&audioThread);
 
-    connect(&audioThread, &QThread::started, player, &qtmmPlayer::threadedInit);
+    connect(&audioThread, &QThread::started,   player, &qtmmPlayer::threadedInit);
 
     connect(this, &qtauController::setEffect,  player, &qtmmPlayer::addEffect);
     connect(this, &qtauController::setTrack,   player, &qtmmPlayer::addTrack);
@@ -236,32 +236,21 @@ void qtauController::onAppMessage(const QString &msg)
     mw->setWindowState(Qt::WindowActive); // TODO: test
 }
 
-#include "audio/Mixer.h"
-
 void qtauController::pianoKeyPressed(int keyNum)
 {
     if (!synths.isEmpty())
     {
-        static qtauAudioSource *a = nullptr;
-
-        if (a)
-        {
-            delete a;
-            a = nullptr;
-        }
-
-        if (!a)
-            a = new qtauAudioSource();
-
         ISynth *s = synths.values().first();
         ust u;
         u.tempo = 120;
         u.notes.append(ust_note(0, "a", 0, 480*3, keyNum)); // 480 pulses * 3 @ 120bpm is 3 notes, 1.5 sec
         s->setVocals(u);
 
+        qtauAudioSource *a = new qtauAudioSource();
+
         if (s->synthesize(*a))
         {
-            emit setEffect(a, true, true);
+            emit setEffect(a, true, true, false);
             emit playStart();
         }
     }
@@ -370,7 +359,7 @@ void qtauController::onRequestStartPlayback()
                 v.vocalWave->open(QIODevice::ReadOnly);
 
             v.vocalWave->reset();
-            emit setTrack(v.vocalWave, true, false);
+            emit setTrack(v.vocalWave, true, false, true);
         }
 
         if (gotMusic)
@@ -379,7 +368,7 @@ void qtauController::onRequestStartPlayback()
                 m.musicWave->open(QIODevice::ReadOnly);
 
             m.musicWave->reset();
-            emit setTrack(m.musicWave, false, false);
+            emit setTrack(m.musicWave, false, false, true);
         }
 
         if (playState.state != Repeating)

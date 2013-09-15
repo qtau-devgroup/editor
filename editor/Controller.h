@@ -29,8 +29,8 @@ public:
     bool run(); // app startup & setup, window creation
 
 signals:
-    void setEffect(qtauAudioSource *e, bool replace, bool smoothly);
-    void setTrack (qtauAudioSource *t, bool replace, bool smoothly);
+    void setEffect(qtauAudioSource *e, bool replace, bool smoothly, bool copy);
+    void setTrack (qtauAudioSource *t, bool replace, bool smoothly, bool copy);
 
     void playStart();
     void playPause();

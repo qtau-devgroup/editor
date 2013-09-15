@@ -4,6 +4,7 @@
 #include "Utils.h"
 #include <math.h>
 #include <qendian.h>
+#include <QDebug>
 
 #ifndef M_SQRT1_2
     #define M_SQRT1_2	0.70710678118654752440
@@ -196,11 +197,11 @@ qint64 qtauSoundMixer::readData(char *data, qint64 maxlen)
          * need to read same amount of frames from all tracks and sources, and if any one is giving less, it's ended
          * signal ended audios so that they may be released
          * */
+
+        if (buffer().size() < maxlen)
+            buffer().resize(maxlen);
+
         QByteArray &buf = buffer();
-
-        if (buf.size() < maxlen)
-            buf.resize(maxlen);
-
         memset(buf.data(), 0, maxlen);
 
         QList<qtauAudioSource*> endedEffects;
@@ -282,7 +283,9 @@ qint64 qtauSoundMixer::readData(char *data, qint64 maxlen)
         }
 
         result = framesProcessed * 4; // 4 bytes per frame (16LE stereo, always)
-        memcpy(data, buf.data(), result);
+
+        if (result > 0)
+            memcpy(data, buf.data(), result);
     }
 
     return result;
