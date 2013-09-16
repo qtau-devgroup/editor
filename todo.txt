@@ -1,5 +1,4 @@
-- wav, aiff, flac and ogg io, menu option to export
-- streamer and threaded playback, anti-glitch and anti-buffer-underrun measures
+- flac and ogg io
 - scaling on load of huge .ust/audio
 - paged waveform, joined wave panel
 - mixer, saving mixdown

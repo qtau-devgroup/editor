@@ -394,13 +394,9 @@ void qtauController::onRequestPausePlayback()
 
 void qtauController::onRequestStopPlayback()
 {
-    if (playState.state == Playing || playState.state == Repeating)
-    {
-        playState.state = Stopped;
-        activeSession->setPlaybackState(EAudioPlayback::stopped);
-        emit playStop();
-    }
-    else vsLog::e("Controller isn't playing anything, can't pause playback.");
+    playState.state = Stopped;
+    activeSession->setPlaybackState(EAudioPlayback::stopped);
+    emit playStop();
 }
 
 void qtauController::onRequestResetPlayback()

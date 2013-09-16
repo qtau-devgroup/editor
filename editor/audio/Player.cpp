@@ -125,9 +125,6 @@ void qtmmPlayer::pause()
 void qtmmPlayer::stop()
 {
     stopTimer->stop();
-
-    audioOutput->suspend();
-    qApp->processEvents();
     audioOutput->stop();
 
     if (!mixer->atEnd())
