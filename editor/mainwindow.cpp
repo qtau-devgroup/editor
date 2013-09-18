@@ -1025,6 +1025,14 @@ void MainWindow::onVocalAudioChanged()
 {
     // show vocal waveform panel and send audioSource to it for generation
     vocalWavePanel->setVisible(true);
+    QList<int> sizes = editorSplitter->sizes();
+
+    if (sizes[1] <= 0)
+    {
+        sizes[1] = 30;
+        editorSplitter->setSizes(sizes);
+    }
+
     vocalWave->setAudio(doc->getVocal().vocalWave);
 }
 
@@ -1032,6 +1040,14 @@ void MainWindow::onMusicAudioChanged()
 {
     // show & fill music waveform panel
     musicWavePanel->setVisible(true);
+    QList<int> sizes = editorSplitter->sizes();
+
+    if (sizes[2] <= 0)
+    {
+        sizes[2] = 30;
+        editorSplitter->setSizes(sizes);
+    }
+
     musicWave->setAudio(doc->getMusic().musicWave);
 }
 
