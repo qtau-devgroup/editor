@@ -1,8 +1,7 @@
 - flac and ogg io
 - scaling on load of huge .ust/audio
 - paged waveform, joined wave panel
-- mixer, saving mixdown
+- saving mixdown
 - progress of playback
 - ui for plugins, selection of synth
-- basic settings (log n, colors, sizes)
 - threaded synth

@@ -146,62 +146,38 @@ MainWindow::MainWindow(QWidget *parent) :
     dummySB->setRange(0,0);
     dummySB->setEnabled(false);
 
-    QFrame *vocalControls = new QFrame(this);
-    vocalControls->setContentsMargins(0,0,0,0);
-    vocalControls->setMinimumSize(c_piano_min_width, c_waveform_min_height);
-    vocalControls->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
-    vocalControls->setFrameStyle(QFrame::Panel | QFrame::Raised);
+    QFrame *waveControls = new QFrame(this);
+    waveControls->setContentsMargins(0,0,0,0);
+    waveControls->setMinimumSize(c_piano_min_width, c_waveform_min_height);
+    waveControls->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
+    waveControls->setFrameStyle(QFrame::Panel | QFrame::Raised);
 
     vocalWave = new qtauWaveform(this);
     vocalWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     vocalWave->setMinimumHeight(c_waveform_min_height);
     vocalWave->setContentsMargins(0,0,0,0);
 
-    QHBoxLayout *vocalWaveL = new QHBoxLayout();
-    vocalWaveL->setContentsMargins(0,0,0,0);
-    vocalWaveL->setSpacing(0);
-    vocalWaveL->addWidget(vocalControls);
-    vocalWaveL->addWidget(vocalWave);
-    vocalWaveL->addWidget(dummySB);
-
-    vocalWavePanel = new QWidget(this);
-    vocalWavePanel->setContentsMargins(0,0,0,0);
-    vocalWavePanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
-
-    vocalWavePanel->setLayout(vocalWaveL);
-    vocalWavePanel->setVisible(false);
-
-    //---------
-
-    QScrollBar *dummySB2 = new QScrollBar(this);
-    dummySB2->setOrientation(Qt::Vertical);
-    dummySB2->setRange(0,0);
-    dummySB2->setEnabled(false);
-
-    QFrame *musicControls = new QFrame(this);
-    musicControls->setContentsMargins(0,0,0,0);
-    musicControls->setMinimumSize(c_piano_min_width, c_waveform_min_height);
-    musicControls->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Expanding);
-    musicControls->setFrameStyle(QFrame::Panel | QFrame::Raised);
-
     musicWave = new qtauWaveform(this);
     musicWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
     musicWave->setMinimumHeight(c_waveform_min_height);
     musicWave->setContentsMargins(0,0,0,0);
 
-    QHBoxLayout *musicWaveL = new QHBoxLayout();
-    musicWaveL->setContentsMargins(0,0,0,0);
-    musicWaveL->setSpacing(0);
-    musicWaveL->addWidget(musicControls);
-    musicWaveL->addWidget(musicWave);
-    musicWaveL->addWidget(dummySB2);
+    QGridLayout *waveformL = new QGridLayout();
+    waveformL->setContentsMargins(0,0,0,0);
+    waveformL->setSpacing(0);
+    waveformL->addWidget(waveControls, 0, 0, 2, 1);
+    waveformL->addWidget(vocalWave,    0, 1, 1, 1);
+    waveformL->addWidget(musicWave,    1, 1, 1, 1);
+    waveformL->addWidget(dummySB,      0, 2, 2, 1);
 
-    musicWavePanel = new QWidget(this);
-    musicWavePanel->setContentsMargins(0,0,0,0);
-    musicWavePanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    wavePanel = new QWidget(this);
+    wavePanel->setContentsMargins(0,0,0,0);
+    wavePanel->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    wavePanel->setLayout(waveformL);
 
-    musicWavePanel->setLayout(musicWaveL);
-    musicWavePanel->setVisible(false);
+    vocalWave->setVisible(false);
+    musicWave->setVisible(false);
+    wavePanel->setVisible(false);
 
     //---- notes' dynamics setup area --------------
 
@@ -280,8 +256,7 @@ MainWindow::MainWindow(QWidget *parent) :
     editorSplitter = new QSplitter(Qt::Vertical, this);
     editorSplitter->setContentsMargins(0,0,0,0);
     editorSplitter->addWidget(editorUpperPanel);
-    editorSplitter->addWidget(vocalWavePanel);
-    editorSplitter->addWidget(musicWavePanel);
+    editorSplitter->addWidget(wavePanel);
     editorSplitter->addWidget(drawZonePanel);
     editorSplitter->setStretchFactor(0, 1);
     editorSplitter->setStretchFactor(1, 0);
@@ -700,10 +675,10 @@ void MainWindow::horzScrolled(int delta)
     meter     ->setOffset (delta);
     drawZone  ->setOffset (delta);
 
-    if (vocalWavePanel->isVisible())
+    if (vocalWave->isVisible())
         vocalWave->setOffset(delta);
 
-    if (musicWavePanel->isVisible())
+    if (musicWave->isVisible())
         musicWave->setOffset(delta);
 }
 
@@ -965,10 +940,10 @@ void MainWindow::onZoomed(int z)
     noteEditor->configure(ns);
     drawZone  ->configure(ns);
 
-    if (vocalWavePanel->isVisible())
+    if (vocalWave->isVisible())
         vocalWave->configure(ns.tempo, ns.note.width());
 
-    if (musicWavePanel->isVisible())
+    if (musicWave->isVisible())
         musicWave->configure(ns.tempo, ns.note.width());
 
     // modify scrollbar sizes and position
@@ -1024,7 +999,8 @@ void MainWindow::onDocEvent(qtauEvent* event)
 void MainWindow::onVocalAudioChanged()
 {
     // show vocal waveform panel and send audioSource to it for generation
-    vocalWavePanel->setVisible(true);
+    wavePanel->setVisible(true);
+    vocalWave->setVisible(true);
     QList<int> sizes = editorSplitter->sizes();
 
     if (sizes[1] <= 0)
@@ -1039,12 +1015,13 @@ void MainWindow::onVocalAudioChanged()
 void MainWindow::onMusicAudioChanged()
 {
     // show & fill music waveform panel
-    musicWavePanel->setVisible(true);
+    wavePanel->setVisible(true);
+    musicWave->setVisible(true);
     QList<int> sizes = editorSplitter->sizes();
 
-    if (sizes[2] <= 0)
+    if (sizes[1] <= 0)
     {
-        sizes[2] = 30;
+        sizes[1] = 30;
         editorSplitter->setSizes(sizes);
     }
 

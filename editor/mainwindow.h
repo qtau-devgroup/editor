@@ -113,9 +113,7 @@ protected:
 
     qtauWaveform   *vocalWave;
     qtauWaveform   *musicWave;
-
-    QWidget        *vocalWavePanel; // used to switch its visibility, hidden by default
-    QWidget        *musicWavePanel;
+    QWidget        *wavePanel; // used to switch its visibility, hidden by default
     QWidget        *drawZonePanel;
     QSplitter      *editorSplitter;
 
