@@ -153,12 +153,12 @@ MainWindow::MainWindow(QWidget *parent) :
     waveControls->setFrameStyle(QFrame::Panel | QFrame::Raised);
 
     vocalWave = new qtauWaveform(this);
-    vocalWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    vocalWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     vocalWave->setMinimumHeight(c_waveform_min_height);
     vocalWave->setContentsMargins(0,0,0,0);
 
     musicWave = new qtauWaveform(this);
-    musicWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+    musicWave->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
     musicWave->setMinimumHeight(c_waveform_min_height);
     musicWave->setContentsMargins(0,0,0,0);
 
@@ -262,6 +262,10 @@ MainWindow::MainWindow(QWidget *parent) :
     editorSplitter->setStretchFactor(1, 0);
     editorSplitter->setStretchFactor(2, 0);
     editorSplitter->setStretchFactor(3, 0);
+
+    QList<int> sizes = editorSplitter->sizes();
+    sizes[1] = 0;
+    editorSplitter->setSizes(sizes);
 
     QVBoxLayout *edVBL = new QVBoxLayout();
     edVBL->setContentsMargins(0,0,0,0);
