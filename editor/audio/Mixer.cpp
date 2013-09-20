@@ -87,9 +87,11 @@ void qtauSoundMixer::addEffect(qtauAudioSource *e, bool replace, bool smoothly)
     else vsLog::e("Sound mixer can't add an empty effect!");
 }
 
-template<qint8>   inline int sampleToS16(const qint8   &s) { return ((float)s - 128.0) / 127.0 * 32767.0; }
-template<quint16> inline int sampleToS16(const quint16 &s) { return s;                                    }
-template<float>   inline int sampleToS16(const float   &s) { return s * 32767.0;                          }
+template<typename T> int sampleTS16(const T &s) { return s; }
+
+template<typename T = quint8> int sampleToS16(const quint8 &s) { return ((float)s - 128.0) / 127.0 * 32767.0;  }
+template<typename T = qint16> int sampleToS16(const qint16 &s) { return s;                                     }
+template<typename T = qint32> int sampleToS16(const qint32 &s) { float *fS = (float*)&s; return *fS * 32767.0; }
 
 template<class T> inline qint64 mixSamplesT(const QByteArray &src, QByteArray &dst, bool stereo, qint64 n)
 {
@@ -103,17 +105,17 @@ template<class T> inline qint64 mixSamplesT(const QByteArray &src, QByteArray &d
     const char *inData  = src.data();
     char       *outData = dst.data();
     T       *srcS;
-    quint16 *dstS;
+    qint16 *dstS;
     int iS, iD;
 
     if (stereo)
     {
-        for (qint64 bS = 0, bD = 0; bS < max; bS += sT2, bD + 4)
+        for (qint64 bS = 0, bD = 0; bS < max; bS += sT2, bD += 4)
         {
             // left channel
             srcS = (T*)     (inData  + bS);
             dstS = (qint16*)(outData + bD);
-            iS = sampleToS16<T>(*srcS);
+            iS = sampleToS16(*srcS);
             iD = *dstS;
 
             iD = M_SQRT1_2 * (iS + iD);
@@ -131,7 +133,7 @@ template<class T> inline qint64 mixSamplesT(const QByteArray &src, QByteArray &d
     }
     else
     {
-        for (qint64 bS = 0, bD = 0; bS < max; bS += sT, bD + 4)
+        for (qint64 bS = 0, bD = 0; bS < max; bS += sT, bD += 4)
         {
             // left channel
             srcS = (T*)     (inData  + bS);
@@ -194,9 +196,9 @@ qint64 qtauSoundMixer::readData(char *data, qint64 maxlen)
 
             switch (e->getAudioFormat().sampleSize())
             {
-            case 8:  effFrames = mixSamplesT<qint8>  (e->read(frames     * numCh), buf, numCh > 1, frames); break;
-            case 16: effFrames = mixSamplesT<quint16>(e->read(frames * 2 * numCh), buf, numCh > 1, frames); break;
-            case 32: effFrames = mixSamplesT<float>  (e->read(frames * 4 * numCh), buf, numCh > 1, frames); break;
+            case 8:  effFrames = mixSamplesT<quint8>(e->read(frames     * numCh), buf, numCh > 1, frames); break;
+            case 16: effFrames = mixSamplesT<qint16>(e->read(frames * 2 * numCh), buf, numCh > 1, frames); break;
+            case 32: effFrames = mixSamplesT<qint32>(e->read(frames * 4 * numCh), buf, numCh > 1, frames); break;
             default:
                 vsLog::e("Sound mixer is processing an effect with unsupported sample size, dropping.");
                 endedEffects.append(e);
@@ -215,9 +217,9 @@ qint64 qtauSoundMixer::readData(char *data, qint64 maxlen)
 
             switch (t->getAudioFormat().sampleSize())
             {
-            case 8:  effFrames = mixSamplesT<qint8>  (e->read(frames     * numCh), buf, numCh > 1, frames); break;
-            case 16: effFrames = mixSamplesT<quint16>(e->read(frames * 2 * numCh), buf, numCh > 1, frames); break;
-            case 32: effFrames = mixSamplesT<float>  (e->read(frames * 4 * numCh), buf, numCh > 1, frames); break;
+            case 8:  trFrames = mixSamplesT<quint8>(t->read(frames     * numCh), buf, numCh > 1, frames); break;
+            case 16: trFrames = mixSamplesT<qint16>(t->read(frames * 2 * numCh), buf, numCh > 1, frames); break;
+            case 32: trFrames = mixSamplesT<qint32>(t->read(frames * 4 * numCh), buf, numCh > 1, frames); break;
             default:
                 vsLog::e("Sound mixer is processing an effect with unsupported sample size, dropping.");
                 endedTracks.append(t);
